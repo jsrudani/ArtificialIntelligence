@@ -114,7 +114,11 @@ public class MazeSearch {
                 System.out.println("Wrong choice!!!");
                 break;
         }
-        if (searchStrategy != null && (Preprocessing.isPathFind() || Preprocessing.isPenalty())) {
+        if (searchStrategy != null && (Preprocessing.isPathFind() 
+                || (Preprocessing.isGhost() && Preprocessing.getGhostPosition() != null)
+                || Preprocessing.isPenalty()
+                || Preprocessing.isMultipleGoal())) {
+            System.out.println("Total goals " + Preprocessing.getGoalSet().size());
             searchStrategy.findPath();
         } else {
             throw new IllegalArgumentException("Invalid choice for search strategy");

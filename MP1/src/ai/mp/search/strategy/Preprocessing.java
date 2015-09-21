@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -32,6 +34,7 @@ public class Preprocessing {
 
     private static int [][] preprocessedMaze;
     private static char[][] solutionMatrix;
+    private static Set<Position> goalSet;
     private static Position startPosition;
     private static Position ghostPosition;
     private static Position goalPosition;
@@ -91,6 +94,7 @@ public class Preprocessing {
                 if (!isInitialized) {
                     preprocessedMaze = new int[rowCount][line.length()];
                     solutionMatrix = new char[rowCount][line.length()];
+                    goalSet = new HashSet<Position>((rowCount * line.length()));
                     isInitialized = true;
                 }
                 System.out.println(line);
@@ -131,6 +135,9 @@ public class Preprocessing {
                     solutionMatrix[row][i] = '.';
                     if (!isMultipleGoal()) {
                         goalPosition = new Position(row, i, null, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+                    } else {
+                        // Collect all the goal position
+                        goalSet.add( new Position(row, i, null, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION) );
                     }
                     break;
                 case 'G' :
@@ -141,6 +148,7 @@ public class Preprocessing {
                     }
                     break;
                 case ' ' :
+                case 'g' :
                     preprocessedMaze[row][i] = MazeConstant.PATH_MARKER;
                     solutionMatrix[row][i] = ' ';
                     break;
@@ -181,11 +189,27 @@ public class Preprocessing {
         return startPosition;
     }
 
+    public static void setStartPosition(Position startPosition) {
+        Preprocessing.startPosition = startPosition;
+    }
+
     public static Position getGhostPosition() {
         return ghostPosition;
     }
 
+    public static void setGhostPosition(Position ghostPosition) {
+        Preprocessing.ghostPosition = ghostPosition;
+    }
+
     public static Position getGoalPosition() {
         return goalPosition;
+    }
+
+    public static void setGoalPosition(Position goalPosition) {
+        Preprocessing.goalPosition = goalPosition;
+    }
+
+    public static Set<Position> getGoalSet() {
+        return goalSet;
     }
 }

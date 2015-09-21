@@ -48,6 +48,14 @@ public class Position implements Comparable<Position> {
      * the Position node from that direction.
      */
     private Position facing;
+    /**
+     * It holds the next neighbor which has least distance among other neighbors.
+     */
+    private Position nextNeighborNode;
+    /**
+     * It holds the edge cost between neighbor and this node.
+     */
+    private long edgeCost;
 
     Position(int x, int y, Position parent, long cost, long approachableCost, int direction) {
         this.x = x;
@@ -102,6 +110,22 @@ public class Position implements Comparable<Position> {
         this.facing = facing;
     }
 
+    public Position getNextNeighborNode() {
+        return nextNeighborNode;
+    }
+
+    public void setNextNeighborNode(Position nextNeighborNode) {
+        this.nextNeighborNode = nextNeighborNode;
+    }
+
+    public long getEdgeCost() {
+        return edgeCost;
+    }
+
+    public void setEdgeCost(long edgeCost) {
+        this.edgeCost = edgeCost;
+    }
+
     @Override
     public String toString() {
         return "[" + x + "," + y + "]";
@@ -130,6 +154,22 @@ public class Position implements Comparable<Position> {
         if (y != other.y)
             return false;
         return true;
+    }
+
+    /**
+     * It is used to return new position object with all default value data members.
+     * 
+     * @param obj
+     * @return Position
+     */
+    public static Position clone(Position obj) {
+        if (obj instanceof Position) {
+            Position newClonedObject = new Position(obj.getX(), obj.getY(), null, MazeConstant.DEFAULT_COST
+                    , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_DIRECTION);
+            newClonedObject.setEdgeCost(MazeConstant.DEFAULT_COST);
+            return newClonedObject;
+        }
+        return null;
     }
 
     @Override

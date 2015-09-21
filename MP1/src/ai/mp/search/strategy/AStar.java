@@ -2,7 +2,10 @@ package ai.mp.search.strategy;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -29,6 +32,8 @@ public class AStar extends SearchOperation {
 
     @Override
     public void findPath() {
+        // Debug
+        char [][] debugMatrix = this.solutionMaze.clone();
         /**
          * It holds all the available positions which are yet to be expanded.
          * It is sorted based on cost.
@@ -39,8 +44,10 @@ public class AStar extends SearchOperation {
          */
         Map<Position,Long> expandedPosition = new HashMap<Position,Long>();
 
-        //Initialize the cost of start node
-        Preprocessing.getStartPosition().setCost( (0 + getHeuristicValue(Preprocessing.getGoalPosition(), Preprocessing.getStartPosition()) ) );
+        //Initialize the cost of start node if there is only one goal state
+        if (!Preprocessing.isMultipleGoal()) {
+            Preprocessing.getStartPosition().setCost( (0 + getHeuristicValue(Preprocessing.getGoalPosition(), Preprocessing.getStartPosition()) ) );
+        }
 
         // Make default direction and facing of start node to right
         Position rightFacing = new Position(Preprocessing.getStartPosition().getX()
@@ -56,6 +63,11 @@ public class AStar extends SearchOperation {
             findPathUsingAStar(openPosition, expandedPosition);
         } else if (Preprocessing.isPenalty()) {
             findPathUsingPenalty(openPosition, expandedPosition, MazeConstant.TURN_COST, MazeConstant.FORWARD_COST);
+        } else if (Preprocessing.isGhost()) {
+            checkAndInitializeGhostDirection(Preprocessing.getGhostPosition());
+            findPathAvoidGhost(openPosition, expandedPosition, Preprocessing.getGhostPosition(), debugMatrix);
+        } else if (Preprocessing.isMultipleGoal()) {
+            findPathThroughMultipleGoals(Preprocessing.getStartPosition(), Preprocessing.getGoalSet());
         }
     }
 
@@ -136,6 +148,185 @@ public class AStar extends SearchOperation {
             MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
             this.stepCost = metrics.getStepCost();
             this.solutionCost = metrics.getSolutionCost();
+        }
+    }
+
+    /**
+     * It is used to find the path from start to goal state with Ghost in the maze.
+     * 
+     * @param openPosition
+     * @param expandedPosition
+     * @param ghostPosition
+     */
+    private void findPathAvoidGhost(TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition
+                                , Position ghostPosition, char [][] debugMatrix) {
+        Position currentPosition = null;
+        int [][] visited = new int [inputMaze.length][inputMaze[0].length];
+        // Traverse till openPosition is not empty and get the position with lowest heuristic value.
+        while (!openPosition.isEmpty()) {
+            ghostPosition = Preprocessing.getGhostPosition();
+            currentPosition = openPosition.pollFirstEntry().getKey();
+            displayCharArray(debugMatrix, currentPosition, ghostPosition);
+            if (inputMaze[currentPosition.getX()][currentPosition.getY()] == MazeConstant.GOAL_POSITION_MARKER) {
+                isGoalReached = true;
+                break;
+            } else {
+                visited[currentPosition.getX()][currentPosition.getY()] = 1;
+
+                // Check if there is ghost or not
+                if (checkForGhostAndMoveGhost(currentPosition, ghostPosition)
+                        || currentPosition.equals(Preprocessing.getGhostPosition())) {
+                    //System.out.println("Pacman " + currentPosition + " Direction " + currentPosition.getDirection());
+                    //System.out.println("Ghost " + Preprocessing.getGhostPosition() + " Direction " + Preprocessing.getGhostPosition().getDirection());
+                    continue;
+                }
+
+                // Mark as visited by inserting into expanded list
+                expandedPosition.put(currentPosition,currentPosition.getApproachableCost());
+
+                // Increment the nodes expanded
+                nodesExpanded += 1;
+
+                // Get the successor node
+                getSuccessorNode(currentPosition, openPosition, expandedPosition, MazeConstant.DEFAULT_PENALTY);
+            }
+        }
+        // Check if solution exist
+        if (isGoalReached) {
+            MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
+            this.stepCost = metrics.getStepCost();
+            this.solutionCost = metrics.getSolutionCost();
+        }
+    }
+
+    /**
+     * It is used to find cheapest path which will cover all dots in a maze.
+     * 
+     * @param goalSet
+     */
+    private void findPathThroughMultipleGoals(Position startPosition, Set<Position> goalSet) {
+        long bestPathCost = Long.MAX_VALUE;
+        // It holds all the explored state
+        Set<Position> exploredSet = new HashSet<Position>();
+        // Iterate through all goals and build a Minimum spanning tree for each goal position
+        Iterator<Position> goalIterator = goalSet.iterator();
+        while (goalIterator.hasNext()) {
+            Position goal = goalIterator.next();
+            // Empty the explored set for new goal position
+            exploredSet.clear();
+            // Set the edge cost as Infinity
+            goal.setEdgeCost(Long.MAX_VALUE);
+            // Build Minimum Spanning Tree
+            Position bestNeighbor = MST(goal, goalSet, exploredSet, bestPathCost);
+            long minimumCost = bestNeighbor.getEdgeCost() + getHeuristicValue(goal, startPosition);
+            // Compare the cost with previous minimum and update if less than previous
+            if (bestPathCost > minimumCost) {
+                bestPathCost = minimumCost;
+                startPosition.setNextNeighborNode(bestNeighbor);
+            }
+        }
+        // Debug print the path
+        while (startPosition != null) {
+            System.out.println(startPosition);
+            startPosition = startPosition.getNextNeighborNode();
+        }
+        // Now heuristic has given best possible path. Run the A* to build path along it
+    }
+
+    /**
+     * It is used to build a Minimum Spanning Tree for given node.
+     * It builds cheapest path from given node to all other nodes. The cheapest path has less cost compared to other.
+     * 
+     * @param goal
+     * @return Position
+     */
+    private Position MST(Position node, final Set<Position> goalSet, Set<Position> exploredSet, long bestPathCost) {
+        Iterator<Position> goalIterator = goalSet.iterator();
+        Position bestNextGoal = null;
+        // Get the total count of goal set
+        long goalCount = goalSet.size();
+        // Add it to Explored set
+        exploredSet.add(node);
+        // Decrement the goal count
+        long edgeCost = 0L;
+        while (goalIterator.hasNext()) {
+            // Clone the next goal
+            Position nextGoal = Position.clone(goalIterator.next());
+
+            // If next goal is not current goal and not already explored
+            if (!node.equals(nextGoal) && !exploredSet.contains(nextGoal)) {
+                // Prune the growing tree if distance between current node to next goal exceeds minimum cost
+                if (getHeuristicValue(nextGoal, node) < bestPathCost) {
+                    goalCount -= 1;
+                    // Recursively call MST for next goal
+                    bestNextGoal = MST(nextGoal,goalSet, exploredSet, bestPathCost);
+                    long bestNextGoalCost = bestNextGoal.getEdgeCost() != Long.MAX_VALUE ? bestNextGoal.getEdgeCost() : 0;
+                    edgeCost = ( bestNextGoalCost + getHeuristicValue(bestNextGoal, node) );
+                    if (edgeCost != 0 && edgeCost < node.getEdgeCost()) {
+                        node.setEdgeCost(edgeCost);
+                        node.setNextNeighborNode(bestNextGoal);
+                    }
+                } else {
+                    // Since the cost is much higher than best part cost. so no need to grow further
+                    continue;
+                }
+            } else {
+                goalCount -= 1;
+                // If node already explored then continue to other node
+                continue;
+            }
+        }
+        // Check if all nodes are explored
+        if (goalCount == 0 && edgeCost != 0 && edgeCost < node.getEdgeCost()) {
+            node.setEdgeCost(edgeCost);
+            node.setNextNeighborNode(bestNextGoal);
+        }
+        // Remove from explored set
+        exploredSet.remove(node);
+        // All paths are explored set the best edge cost and best next neighbor
+        return node;
+    }
+
+    /**
+     * It is used to move the ghost in appropriate direction. If there is a wall then ghost direction is changed and
+     * move in opposite direction. It is also used to indicate whether the new position of ghost is danger for
+     * Pacman.
+     * 
+     * @param ghost
+     * @return boolean
+     */
+    private boolean checkForGhostAndMoveGhost(Position pacman, Position ghost) {
+        boolean dangerPosition = false;
+        // Check whether next move of ghost is valid or not and change direction accordingly
+        checkAndInitializeGhostDirection(ghost);
+        ghost = Preprocessing.getGhostPosition();
+        if (pacman.equals(ghost) && pacman.getDirection() != ghost.getDirection()) {
+            dangerPosition = true;
+        }
+        // Move the ghost even if pacman knows that its not a valid position
+        moveGhost(ghost);
+        return dangerPosition;
+    }
+
+    /**
+     * It is used to move the ghost to next position in appropriate direction
+     * 
+     * @param ghost
+     */
+    private void moveGhost(Position ghost) {
+        Position newGhostPosition = null;
+        switch (ghost.getDirection()) {
+            case MazeConstant.LEFT_DIRECTION :
+                newGhostPosition = new Position(ghost.getX(), (ghost.getY() - 1), null
+                            , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);
+                break;
+            case MazeConstant.RIGHT_DIRECTION :
+                newGhostPosition = new Position(ghost.getX(), (ghost.getY() + 1), null
+                            , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+                break;
+        }
+        if (newGhostPosition != null) {
+            Preprocessing.setGhostPosition(newGhostPosition);
         }
     }
 
@@ -225,6 +416,11 @@ public class AStar extends SearchOperation {
      */
     private long getHeuristicValue(Position goalState, Position currentPosition) {
         return ( ( Math.abs(goalState.getX() - currentPosition.getX()) ) + ( Math.abs(goalState.getY() - currentPosition.getY()) ) );
+        /*long x = (goalState.getX() - currentPosition.getX());
+        long y = (goalState.getY() - currentPosition.getY());
+        System.out.println("double value " + Math.ceil( ( Math.sqrt( (double)(Math.pow(x, 2) + Math.pow(y, 2)) ) ) ));
+        System.out.println("Long value " + (long) ( Math.sqrt( (double)(Math.pow(x, 2) + Math.pow(y, 2)) ) ));
+        return (long) Math.ceil( ( Math.sqrt( (double)(Math.pow(x, 2) + Math.pow(y, 2)) ) ) );*/
     }
 
     /**
@@ -274,6 +470,36 @@ public class AStar extends SearchOperation {
         return penalty;
     }
 
+    /**
+     * It is used to ghost direction. If there is a wall left/right immediately to current position then
+     * direction is changed to opposite direction.
+     *  
+     * @param ghost
+     */
+    private void checkAndInitializeGhostDirection(Position ghost) {
+        Position newGhostPosition = ghost;
+        boolean isGhostPositionUpdated = false;
+        switch (ghost.getDirection()) {
+            case MazeConstant.LEFT_DIRECTION :
+                if (inputMaze[ghost.getX()][(ghost.getY() - 1)] == MazeConstant.WALL_MARKER) {
+                    isGhostPositionUpdated = true;
+                    newGhostPosition = new Position(ghost.getX(), ghost.getY(), null
+                            , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+                }
+                break;
+            case MazeConstant.RIGHT_DIRECTION :
+                if (inputMaze[ghost.getX()][(ghost.getY() + 1)] == MazeConstant.WALL_MARKER) {
+                    isGhostPositionUpdated = true;
+                    newGhostPosition = new Position(ghost.getX(), ghost.getY(), null
+                            , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);
+                }
+                break;
+        }
+        if (isGhostPositionUpdated) {
+            Preprocessing.setGhostPosition(newGhostPosition);
+        }
+    }
+
     @Override
     public char[][] getSolutionMaze() {
         return this.solutionMaze;
@@ -311,6 +537,22 @@ public class AStar extends SearchOperation {
     @Override
     public long getSolutionCost() {
         return this.solutionCost;
+    }
+
+    // Debug purpose then delete it
+    private void displayCharArray(char [][] array, Position pacman, Position ghost) {
+        array[pacman.getX()][pacman.getY()] = 'P';
+        array[ghost.getX()][ghost.getY()] = 'g';
+        int row = array.length;
+        int col = array[0].length;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                System.out.print(array[i][j]);
+            }
+            System.out.println();
+        }
+        array[pacman.getX()][pacman.getY()] = ' ';
+        array[ghost.getX()][ghost.getY()] = ' ';
     }
 }
 /**

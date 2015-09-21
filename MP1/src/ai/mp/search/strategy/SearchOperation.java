@@ -72,7 +72,7 @@ abstract class SearchOperation {
         while (childNode != null && childNode.getParent() != null) {
             solutionMaze[childNode.getX()][childNode.getY()] = '.';
             solutionCost += childNode.getCost();
-            System.out.println("child node " + childNode + "approach cost " + childNode.getApproachableCost());
+            //System.out.println("child node " + childNode + "approach cost " + childNode.getApproachableCost());
             childNode = childNode.getParent();
             stepCost += 1;
         }

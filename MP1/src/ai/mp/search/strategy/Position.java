@@ -56,6 +56,10 @@ public class Position implements Comparable<Position> {
      * It holds the edge cost between neighbor and this node.
      */
     private long edgeCost;
+    /**
+     * It indicates whether position was already explored or not.
+     */
+    private boolean isVisited;
 
     Position(int x, int y, Position parent, long cost, long approachableCost, int direction) {
         this.x = x;
@@ -64,6 +68,7 @@ public class Position implements Comparable<Position> {
         this.cost = cost;
         this.approachableCost = approachableCost;
         this.direction = direction;
+        this.isVisited = false;
     }
 
     public int getX() {
@@ -124,6 +129,14 @@ public class Position implements Comparable<Position> {
 
     public void setEdgeCost(long edgeCost) {
         this.edgeCost = edgeCost;
+    }
+
+    public boolean isVisited() {
+        return isVisited;
+    }
+
+    public void setVisited(boolean isVisited) {
+        this.isVisited = isVisited;
     }
 
     @Override

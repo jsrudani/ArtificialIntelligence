@@ -135,7 +135,7 @@ public class MazeSearch {
             System.out.println();
         }
     }
-    private static void displayCharArray(char [][] array) {
+    public static void displayCharArray(char [][] array) {
         int row = array.length;
         int col = array[0].length;
         for (int i = 0; i < row; i++) {

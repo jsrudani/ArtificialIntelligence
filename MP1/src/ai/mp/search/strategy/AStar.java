@@ -1,9 +1,11 @@
 package ai.mp.search.strategy;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -67,7 +69,8 @@ public class AStar extends SearchOperation {
             checkAndInitializeGhostDirection(Preprocessing.getGhostPosition());
             findPathAvoidGhost(openPosition, expandedPosition, Preprocessing.getGhostPosition(), debugMatrix);
         } else if (Preprocessing.isMultipleGoal()) {
-            findPathThroughMultipleGoals(Preprocessing.getStartPosition(), Preprocessing.getGoalSet());
+            findPathThroughMultipleGoals(Preprocessing.getStartPosition(), Preprocessing.getGoalSet(), openPosition
+                    , expandedPosition);
         }
     }
 
@@ -204,87 +207,104 @@ public class AStar extends SearchOperation {
      * 
      * @param goalSet
      */
-    private void findPathThroughMultipleGoals(Position startPosition, Set<Position> goalSet) {
-        long bestPathCost = Long.MAX_VALUE;
-        // It holds all the explored state
-        Set<Position> exploredSet = new HashSet<Position>();
-        // Iterate through all goals and build a Minimum spanning tree for each goal position
-        Iterator<Position> goalIterator = goalSet.iterator();
-        while (goalIterator.hasNext()) {
-            Position goal = goalIterator.next();
-            // Empty the explored set for new goal position
-            exploredSet.clear();
-            // Set the edge cost as Infinity
-            goal.setEdgeCost(Long.MAX_VALUE);
-            // Build Minimum Spanning Tree
-            Position bestNeighbor = MST(goal, goalSet, exploredSet, bestPathCost);
-            long minimumCost = bestNeighbor.getEdgeCost() + getHeuristicValue(goal, startPosition);
-            // Compare the cost with previous minimum and update if less than previous
-            if (bestPathCost > minimumCost) {
-                bestPathCost = minimumCost;
-                startPosition.setNextNeighborNode(bestNeighbor);
+    private void findPathThroughMultipleGoals(Position startPosition, Set<Position> goalSet, TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition) {
+
+        Position currentPosition;
+        // Add to open position
+        openPosition.put(startPosition, startPosition.getCost());
+        // Loop till all dots are covered
+        int index = 49;
+        while (!goalSet.isEmpty()) {
+            currentPosition = openPosition.pollFirstEntry().getKey();
+            // Check if best next neighbor is goal
+            if (goalSet.contains(currentPosition)) {
+                System.out.println("Goal set before " + goalSet);
+                goalSet.remove(currentPosition);
+                System.out.println("Goal set after " + goalSet);
+                // Draw solution path from current goal to start position
+                char sol = (char) index;
+                this.solutionMaze[currentPosition.getX()][currentPosition.getY()] = sol;
+                MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
+                this.stepCost += metrics.getStepCost();
+                this.solutionCost += metrics.getSolutionCost();
+                MazeSearch.displayCharArray(this.getSolutionMaze());
+                // Clear the expanded set and open set to start fresh from new start point
+                expandedPosition.clear();
+                openPosition.clear();
+                // Add the current goal as new start point in open position
+                openPosition.put(currentPosition, currentPosition.getCost());
+                // Check index in the range 1-9, a-z, A-Z
+                index += 1;
+                if (index == 58) {
+                    index = 97;
+                } else if (index == 122) {
+                    index = 65;
+                }
+                if (goalSet.isEmpty())
+                    break;
+            } else {
+                // Expand the current node
+                expandedPosition.put(currentPosition, currentPosition.getApproachableCost());
+                // Increment nodes expanded
+                nodesExpanded += 1;
+                // Find the child position
+                List<Position> children = getValidChildPosition(currentPosition, expandedPosition);
+                Iterator<Position> child = children.iterator();
+                // Build MST for each child
+                while (child.hasNext()) {
+                    Position eachChild = child.next();
+                    // Build the MST for child and goal set
+                    System.out.println("Child " + eachChild);
+                    MST spanningTree = new MST(eachChild, goalSet);
+                    long edgeCost = spanningTree.buildMST();
+                    // Set the cost of each child to edge cost
+                    eachChild.setCost(edgeCost);
+                    // Check if current total edge cost is minimum
+                    openPosition.put(eachChild,eachChild.getCost());
+                }
+                System.out.println("----------------------------");
             }
         }
-        // Debug print the path
-        while (startPosition != null) {
-            System.out.println(startPosition);
-            startPosition = startPosition.getNextNeighborNode();
-        }
-        // Now heuristic has given best possible path. Run the A* to build path along it
     }
 
     /**
-     * It is used to build a Minimum Spanning Tree for given node.
-     * It builds cheapest path from given node to all other nodes. The cheapest path has less cost compared to other.
+     * It is used to return all valid position possible from given position
      * 
-     * @param goal
-     * @return Position
+     * @param currentPosition
+     * @return Collection
      */
-    private Position MST(Position node, final Set<Position> goalSet, Set<Position> exploredSet, long bestPathCost) {
-        Iterator<Position> goalIterator = goalSet.iterator();
-        Position bestNextGoal = null;
-        // Get the total count of goal set
-        long goalCount = goalSet.size();
-        // Add it to Explored set
-        exploredSet.add(node);
-        // Decrement the goal count
-        long edgeCost = 0L;
-        while (goalIterator.hasNext()) {
-            // Clone the next goal
-            Position nextGoal = Position.clone(goalIterator.next());
+    private List<Position> getValidChildPosition(Position currentPosition, Map<Position,Long> expandedPosition) {
 
-            // If next goal is not current goal and not already explored
-            if (!node.equals(nextGoal) && !exploredSet.contains(nextGoal)) {
-                // Prune the growing tree if distance between current node to next goal exceeds minimum cost
-                if (getHeuristicValue(nextGoal, node) < bestPathCost) {
-                    goalCount -= 1;
-                    // Recursively call MST for next goal
-                    bestNextGoal = MST(nextGoal,goalSet, exploredSet, bestPathCost);
-                    long bestNextGoalCost = bestNextGoal.getEdgeCost() != Long.MAX_VALUE ? bestNextGoal.getEdgeCost() : 0;
-                    edgeCost = ( bestNextGoalCost + getHeuristicValue(bestNextGoal, node) );
-                    if (edgeCost != 0 && edgeCost < node.getEdgeCost()) {
-                        node.setEdgeCost(edgeCost);
-                        node.setNextNeighborNode(bestNextGoal);
-                    }
-                } else {
-                    // Since the cost is much higher than best part cost. so no need to grow further
-                    continue;
-                }
-            } else {
-                goalCount -= 1;
-                // If node already explored then continue to other node
-                continue;
-            }
+        List<Position> children = new ArrayList<Position>();
+        Position child = null;
+        // Get the upper node
+        child = new Position((currentPosition.getX()-1), currentPosition.getY(), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.UP_DIRECTION);
+        if (isChildValid(inputMaze, child) && !expandedPosition.containsKey(child)) {
+            children.add(child);
         }
-        // Check if all nodes are explored
-        if (goalCount == 0 && edgeCost != 0 && edgeCost < node.getEdgeCost()) {
-            node.setEdgeCost(edgeCost);
-            node.setNextNeighborNode(bestNextGoal);
+
+        // Get the lower node
+        child = new Position((currentPosition.getX()+1), currentPosition.getY(), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.DOWN_DIRECTION);
+        if (isChildValid(inputMaze, child) && !expandedPosition.containsKey(child)) {
+            children.add(child);
         }
-        // Remove from explored set
-        exploredSet.remove(node);
-        // All paths are explored set the best edge cost and best next neighbor
-        return node;
+
+        // Get the left node
+        child = new Position(currentPosition.getX(), (currentPosition.getY()-1), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);
+        if (isChildValid(inputMaze, child) && !expandedPosition.containsKey(child)) {
+            children.add(child);
+        }
+
+        // Get the right node
+        child = new Position(currentPosition.getX(), (currentPosition.getY()+1), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+        if (isChildValid(inputMaze, child) && !expandedPosition.containsKey(child)) {
+            children.add(child);
+        }
+        return children;
     }
 
     /**

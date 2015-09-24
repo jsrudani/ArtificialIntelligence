@@ -225,13 +225,19 @@ public class AStar extends SearchOperation {
                 char sol = (char) index;
                 this.solutionMaze[currentPosition.getX()][currentPosition.getY()] = sol;
                 MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
+                System.out.println("Before updating step cost " + this.stepCost);
+                System.out.println("metrics.getStepCost() " + metrics.getStepCost());
                 this.stepCost += metrics.getStepCost();
+                System.out.println("After updating step cost " + this.getStepCost());
                 this.solutionCost += metrics.getSolutionCost();
                 MazeSearch.displayCharArray(this.getSolutionMaze());
+                System.out.println("Step-----> " + this.getStepCost());
                 // Clear the expanded set and open set to start fresh from new start point
                 expandedPosition.clear();
                 openPosition.clear();
-                // Add the current goal as new start point in open position
+                // Add the current goal as new start point in open position and also reset
+                // its parent pointer else it would be count twice
+                currentPosition.setParent(null);
                 openPosition.put(currentPosition, currentPosition.getCost());
                 // Check index in the range 1-9, a-z, A-Z
                 index += 1;

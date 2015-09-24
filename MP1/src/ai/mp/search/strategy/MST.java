@@ -35,11 +35,15 @@ public class MST {
      * size 1.
      */
     private void initializeSubset() {
+        // Reset the visited states for start position
+        startPosition.setVisited(false);
         // Add the start position
         subsets.put(startPosition, new Subset(startPosition, 0));
         Iterator<Position> goals = goalSet.iterator();
         while (goals.hasNext()) {
             Position nextGoal = goals.next();
+            // Reset the visited states
+            nextGoal.setVisited(false);
             subsets.put(nextGoal, new Subset(nextGoal, 0));
         }
     }
@@ -52,6 +56,8 @@ public class MST {
             long edgeCount = 0L;
             // Calculate the edge cost between every goals and start position
             calculateEdgeCost();
+            // debug
+            System.out.println("B4 sort " + edges);
             // Sort the edge as per weight
             Collections.sort(edges, new EdgeComparator());
             System.out.println(edges);
@@ -75,8 +81,8 @@ public class MST {
                     union(position1,position2);
                 }
                 // debug
-                System.out.println("Edge count " + edgeCount);
-                System.out.println("Goal count " + goalSet.size());
+                //System.out.println("Edge count " + edgeCount);
+                //System.out.println("Goal count " + goalSet.size());
                 // Check if all edges are visited
                 if (edgeCount == goalSet.size()) {
                     System.out.println("Edge cost " + edgeCost);

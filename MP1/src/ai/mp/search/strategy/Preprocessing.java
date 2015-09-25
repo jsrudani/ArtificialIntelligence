@@ -61,6 +61,7 @@ public class Preprocessing {
                 break;
             case 4:
                 isSuboptimalSearch = true;
+                isMultipleGoal = true;
                 break;
             case 5:
                 isPathFind = true;

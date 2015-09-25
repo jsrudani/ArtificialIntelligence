@@ -57,12 +57,12 @@ public class MST {
             // Calculate the edge cost between every goals and start position
             calculateEdgeCost();
             // debug
-            System.out.println("B4 sort " + edges);
+            //System.out.println("B4 sort " + edges);
             // Sort the edge as per weight
             Collections.sort(edges, new EdgeComparator());
-            System.out.println(edges);
+            //System.out.println(edges);
             //System.out.println("Edge size " + edges.size());
-            System.out.println(subsets);
+            //System.out.println(subsets);
             // For every edge build the MST
             Iterator<Edge> edge = edges.iterator();
             while (edge.hasNext()) {
@@ -167,7 +167,8 @@ public class MST {
      * @return long
      */
     private long getEdgeCost(Position goalState, Position currentPosition) {
-        return ( ( Math.abs(goalState.getX() - currentPosition.getX()) ) + ( Math.abs(goalState.getY() - currentPosition.getY()) ) );
+        return ( ( Math.abs(goalState.getX() - currentPosition.getX()) )
+                + ( Math.abs(goalState.getY() - currentPosition.getY()) ) );
     }
 }
 

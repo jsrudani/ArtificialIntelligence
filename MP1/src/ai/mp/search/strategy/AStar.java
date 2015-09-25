@@ -68,8 +68,11 @@ public class AStar extends SearchOperation {
         } else if (Preprocessing.isGhost()) {
             checkAndInitializeGhostDirection(Preprocessing.getGhostPosition());
             findPathAvoidGhost(openPosition, expandedPosition, Preprocessing.getGhostPosition(), debugMatrix);
-        } else if (Preprocessing.isMultipleGoal()) {
+        } else if (Preprocessing.isMultipleGoal() && !Preprocessing.isSuboptimalSearch()) {
             findPathThroughMultipleGoals(Preprocessing.getStartPosition(), Preprocessing.getGoalSet(), openPosition
+                    , expandedPosition);
+        } else if (Preprocessing.isSuboptimalSearch()) {
+            findPathForSuboptimalSearch(Preprocessing.getStartPosition(), Preprocessing.getGoalSet(), openPosition
                     , expandedPosition);
         }
     }
@@ -218,9 +221,9 @@ public class AStar extends SearchOperation {
             currentPosition = openPosition.pollFirstEntry().getKey();
             // Check if best next neighbor is goal
             if (goalSet.contains(currentPosition)) {
-                System.out.println("Goal set before " + goalSet);
+                //System.out.println("Goal set before " + goalSet);
                 goalSet.remove(currentPosition);
-                System.out.println("Goal set after " + goalSet);
+                //System.out.println("Goal set after " + goalSet);
                 // Draw solution path from current goal to start position
                 char sol = (char) index;
                 this.solutionMaze[currentPosition.getX()][currentPosition.getY()] = sol;
@@ -231,19 +234,20 @@ public class AStar extends SearchOperation {
                 System.out.println("After updating step cost " + this.getStepCost());
                 this.solutionCost += metrics.getSolutionCost();
                 MazeSearch.displayCharArray(this.getSolutionMaze());
-                System.out.println("Step-----> " + this.getStepCost());
+                //System.out.println("Step-----> " + this.getStepCost());
                 // Clear the expanded set and open set to start fresh from new start point
                 expandedPosition.clear();
                 openPosition.clear();
                 // Add the current goal as new start point in open position and also reset
                 // its parent pointer else it would be count twice
                 currentPosition.setParent(null);
-                openPosition.put(currentPosition, currentPosition.getCost());
+                currentPosition.setApproachableCost(0L);
+                openPosition.put(currentPosition, currentPosition.getApproachableCost());
                 // Check index in the range 1-9, a-z, A-Z
                 index += 1;
                 if (index == 58) {
                     index = 97;
-                } else if (index == 122) {
+                } else if (index == 123) {
                     index = 65;
                 }
                 if (goalSet.isEmpty())
@@ -264,9 +268,68 @@ public class AStar extends SearchOperation {
                     MST spanningTree = new MST(eachChild, goalSet);
                     long edgeCost = spanningTree.buildMST();
                     // Set the cost of each child to edge cost
-                    eachChild.setCost(edgeCost);
-                    // Check if current total edge cost is minimum
-                    openPosition.put(eachChild,eachChild.getCost());
+                    calculateHeuristicAndUpdateCost(currentPosition, eachChild
+                            , openPosition, expandedPosition, (edgeCost));
+                }
+                System.out.println("----------------------------");
+            }
+        }
+    }
+
+    /**
+     * It is used to find sub-optimal path through all search dots.
+     * 
+     * @param goalSet
+     */
+    private void findPathForSuboptimalSearch(Position startPosition, Set<Position> goalSet, TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition) {
+
+        Position currentPosition;
+        // Add to open position
+        openPosition.put(startPosition, startPosition.getCost());
+        // Loop till all dots are covered
+        while (!goalSet.isEmpty()) {
+            currentPosition = openPosition.pollFirstEntry().getKey();
+            // Check if best next neighbor is goal
+            if (goalSet.contains(currentPosition)) {
+                goalSet.remove(currentPosition);
+                // Draw solution path from current goal to start position
+                this.solutionMaze[currentPosition.getX()][currentPosition.getY()] = 'P';
+                MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
+                //System.out.println("Before updating step cost " + this.stepCost);
+                //System.out.println("metrics.getStepCost() " + metrics.getStepCost());
+                this.stepCost += metrics.getStepCost();
+                //System.out.println("After updating step cost " + this.getStepCost());
+                this.solutionCost += metrics.getSolutionCost();
+                MazeSearch.displayCharArray(this.getSolutionMaze());
+                //System.out.println("Step-----> " + this.getStepCost());
+                // Clear the expanded set and open set to start fresh from new start point
+                expandedPosition.clear();
+                openPosition.clear();
+                // Add the current goal as new start point in open position and also reset
+                // its parent pointer else it would be count twice
+                currentPosition.setParent(null);
+                currentPosition.setApproachableCost(0L);
+                openPosition.put(currentPosition, currentPosition.getApproachableCost());
+                if (goalSet.isEmpty())
+                    break;
+            } else {
+                // Expand the current node
+                expandedPosition.put(currentPosition, currentPosition.getApproachableCost());
+                // Increment nodes expanded
+                nodesExpanded += 1;
+                // Find the child position
+                List<Position> children = getValidChildPosition(currentPosition, expandedPosition);
+                Iterator<Position> child = children.iterator();
+                // Build MST for each child
+                while (child.hasNext()) {
+                    Position eachChild = child.next();
+                    // Build the MST for child and goal set
+                    System.out.println("Child " + eachChild);
+                    MST spanningTree = new MST(eachChild, goalSet);
+                    long edgeCost = spanningTree.buildMST();
+                    // Set the cost of each child to edge cost
+                    calculateHeuristicAndUpdateCost(currentPosition, eachChild
+                            , openPosition, expandedPosition, (edgeCost * 2));
                 }
                 System.out.println("----------------------------");
             }
@@ -311,6 +374,30 @@ public class AStar extends SearchOperation {
             children.add(child);
         }
         return children;
+    }
+
+    /**
+     * It is used to check if child node exist in expanded or open position list. 
+     * If exist then update the Map accordingly.
+     * 
+     * @param parentNode
+     * @param childNode
+     * @param openPosition
+     * @param expandedPosition
+     * @param heuristicCost
+     */
+    private void calculateHeuristicAndUpdateCost(Position parentNode, Position childNode
+            , TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition
+            , long heuristicCost) {
+        long approachedCost = (parentNode.getApproachableCost() + 1);
+        if (!openPosition.containsKey(childNode) || approachedCost < openPosition.get(childNode)) {
+            childNode.setParent(parentNode);
+            childNode.setApproachableCost(approachedCost);
+            childNode.setCost( (childNode.getApproachableCost() + heuristicCost) );
+            if (!openPosition.containsKey(childNode)) {
+                openPosition.put(childNode, childNode.getApproachableCost());
+            }
+        }
     }
 
     /**

@@ -117,7 +117,8 @@ public class MazeSearch {
         if (searchStrategy != null && (Preprocessing.isPathFind() 
                 || (Preprocessing.isGhost() && Preprocessing.getGhostPosition() != null)
                 || Preprocessing.isPenalty()
-                || Preprocessing.isMultipleGoal())) {
+                || Preprocessing.isMultipleGoal()
+                || Preprocessing.isSuboptimalSearch())) {
             System.out.println("Total goals " + Preprocessing.getGoalSet().size());
             searchStrategy.findPath();
         } else {

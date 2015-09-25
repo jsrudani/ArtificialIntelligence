@@ -70,13 +70,13 @@ public class DFS extends SearchOperation {
         if (isChildValid(inputMaze, child)) {
             successor.push(child);
         }
-        // Get the lower node
-        child = new Position((node.getX()+1), node.getY(), node, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+        // Get the left node
+        child = new Position(node.getX(), (node.getY()-1), node, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
         if (isChildValid(inputMaze, child)) {
             successor.push(child);
         }
-        // Get the left node
-        child = new Position(node.getX(), (node.getY()-1), node, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+        // Get the lower node
+        child = new Position((node.getX()+1), node.getY(), node, MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
         if (isChildValid(inputMaze, child)) {
             successor.push(child);
         }

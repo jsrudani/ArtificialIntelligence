@@ -1,5 +1,6 @@
 package ai.mp.search.strategy;
 
+
 /**
  * It is used to identify the position in Maze. 
  * It holds the co-ordinate information.

@@ -85,7 +85,7 @@ public class MST {
                 //System.out.println("Goal count " + goalSet.size());
                 // Check if all edges are visited
                 if (edgeCount == goalSet.size()) {
-                    System.out.println("Edge cost " + edgeCost);
+                    //System.out.println("Edge cost " + edgeCost);
                     break;
                 }
             }

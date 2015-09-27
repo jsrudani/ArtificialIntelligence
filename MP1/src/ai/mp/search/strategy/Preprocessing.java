@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,7 +96,7 @@ public class Preprocessing {
                 if (!isInitialized) {
                     preprocessedMaze = new int[rowCount][line.length()];
                     solutionMatrix = new char[rowCount][line.length()];
-                    goalSet = new LinkedHashSet<Position>();
+                    goalSet = new HashSet<Position>();
                     isInitialized = true;
                 }
                 System.out.println(line);

@@ -230,7 +230,10 @@ public class AStar extends SearchOperation {
         currentMazeState = new MazeState(startPosition);
         currentMazeState.setGoalSet(goalSet);
         //currentMazeState.setExpandedMazeState(expandedMazeState);
-        openMazeState.put(currentMazeState, currentMazeState.getApproachableCost());
+        MST startSpanningTree = new MST(currentMazeState.getPosition(), currentMazeState.getGoalSet());
+        long startEdgeCost = startSpanningTree.buildMST();
+        currentMazeState.setEdgeCost(startEdgeCost);
+        openMazeState.put(currentMazeState, currentMazeState.getEdgeCost());
 
         // Loop till open maze state is not empty
         while (!openMazeState.isEmpty()) {
@@ -270,7 +273,7 @@ public class AStar extends SearchOperation {
                     long edgeCost = spanningTree.buildMST();
                     // Set the cost of each child to edge cost
                     calculateHeuristicAndUpdateCost(currentMazeState, eachMazeChild
-                            , openMazeState, expandedMazeState, (edgeCost));
+                            , openMazeState, expandedMazeState, (edgeCost * 3));
                     //System.out.println("eachMazeChild " + eachMazeChild);
                 }
                 //System.out.println("===========================================");
@@ -464,24 +467,24 @@ public class AStar extends SearchOperation {
             , TreeMap<MazeState, Long> openMazeState, Map<MazeState,Long> expandedMazeState
             , long heuristicCost) {
         long approachedCost = (parentMaze.getApproachableCost() + 1);
-        //long totalHeuristicCost = (approachedCost + heuristicCost);
+        long totalHeuristicCost = (approachedCost + heuristicCost);
         // Initialize default field
         childMaze.setParent(parentMaze);
         childMaze.setApproachableCost(approachedCost);
-        childMaze.setEdgeCost( (childMaze.getApproachableCost() + heuristicCost) );
+        childMaze.setEdgeCost( (approachedCost + heuristicCost) );
         // Check if it is in open list
         if (!openMazeState.containsKey(childMaze)) {
-            openMazeState.put(childMaze, childMaze.getApproachableCost());
+            openMazeState.put(childMaze, childMaze.getEdgeCost());
         } else if (openMazeState.containsKey(childMaze)) {
             //System.out.println("Matches " + childMaze);
             //System.out.println("approachedCost" + approachedCost);
             //System.out.println("openMazeState.get(childMaze) " + openMazeState.get(childMaze));
-            if (approachedCost < openMazeState.get(childMaze)) {
+            if (totalHeuristicCost < openMazeState.get(childMaze)) {
                 //System.out.println("B4 remove ");
                 // Remove old child maze
                 openMazeState.remove(childMaze);
                 //System.out.println("After remove " + openMazeState);
-                openMazeState.put(childMaze, childMaze.getApproachableCost());
+                openMazeState.put(childMaze, childMaze.getEdgeCost());
                 //System.out.println("After adding new " + openMazeState);
             }
         }

@@ -215,7 +215,6 @@ public class AStar extends SearchOperation {
      */
     private void findPathThroughMultipleGoals(Position startPosition, Set<Position> goalSet) {
 
-        // Define the open and expanded Maze state position
         /**
          * It holds all the available positions which are yet to be expanded.
          * It is sorted based on cost.
@@ -238,23 +237,20 @@ public class AStar extends SearchOperation {
             //System.out.println("Open Set"  + openMazeState + "\n");
             // Get the least edge cost maze state
             currentMazeState = openMazeState.pollFirstEntry().getKey();
-            //System.out.println("Current position " + currentMazeState.getPosition() + "\n");
+            //System.out.println("Current position " + currentMazeState);
             // Check if current position in maze is goal then decrement the goal set in that maze set
             if (currentMazeState.getGoalSet().contains(currentMazeState.getPosition())) {
                 //System.out.println("Goal reached --> " + currentMazeState.getPosition());
                 Set<Position> mazeGoalSet = currentMazeState.getGoalSet();
                 mazeGoalSet.remove(currentMazeState.getPosition());
                 currentMazeState.setGoalSet(mazeGoalSet);
-                // Clear my expanded list as I can travel back to other goals
-                //currentMazeState.getExpandedMazeState().clear();
                 //System.out.println("Updated goal size " + currentMazeState.getGoalSet().size());
-            }
-            // Check if all the goals in the current maze set is empty or not
-            if (currentMazeState.getGoalSet().isEmpty()) {
-                // All the goals are covered. so just print the maze state following the parent pointer
-                isGoalReached = true;
-                break;
-            } else {
+                if (currentMazeState.getGoalSet().isEmpty()) {
+                    // All the goals are covered. so just print the maze state following the parent pointer
+                    isGoalReached = true;
+                    break;
+                }
+            } //else {
                 //expandedMazeState = currentMazeState.getExpandedMazeState();
                 //System.out.println(expandedMazeState);
                 // Mark the state as visited
@@ -269,28 +265,27 @@ public class AStar extends SearchOperation {
                 // Build MST for each child
                 while (child.hasNext()) {
                     MazeState eachMazeChild = child.next();
-                    // Clone the goal set from current maze
-                    //cloneGoalSet(currentMazeState, eachMazeChild);
-                    //cloneExpandedSet(currentMazeState, eachMazeChild);
                     // Build the MST for child and goal set
-                    //System.out.println("eachMazeChild " + eachMazeChild.getPosition() + "\n");
                     MST spanningTree = new MST(eachMazeChild.getPosition(), eachMazeChild.getGoalSet());
                     long edgeCost = spanningTree.buildMST();
                     // Set the cost of each child to edge cost
                     calculateHeuristicAndUpdateCost(currentMazeState, eachMazeChild
-                            , openMazeState, expandedMazeState, edgeCost);
+                            , openMazeState, expandedMazeState, (edgeCost));
+                    //System.out.println("eachMazeChild " + eachMazeChild);
                 }
                 //System.out.println("===========================================");
-            }
+            //}
         }
         //System.out.println("open set size " + openMazeState.size());
         // Check if solution exist
         Stack<Position> positionStack = new Stack<Position>();
         if (isGoalReached) {
             while (currentMazeState != null && currentMazeState.getParent() != null) {
+                //System.out.println(currentMazeState);
                 // Check if it is part of goal
                 if (goalSet.contains(currentMazeState.getPosition())) {
                     positionStack.push(currentMazeState.getPosition());
+                    goalSet.remove(currentMazeState.getPosition());
                 }
                 currentMazeState = currentMazeState.getParent();
                 stepCost += 1;
@@ -327,22 +322,6 @@ public class AStar extends SearchOperation {
             childGoalSet.add(parentGoalSetItr.next());
         }
         childState.setGoalSet(childGoalSet);
-    }
-
-    /**
-     * It is used to clone the goal set from parent maze to child maze
-     * 
-     * @param parentState
-     * @param childState
-     */
-    private void cloneExpandedSet(MazeState parentState, MazeState childState) {
-        Map<MazeState,Long> parentExpandedSet = parentState.getExpandedMazeState();
-        Map<MazeState,Long> childExpandedSet = new HashMap<MazeState,Long>();
-        for(MazeState key : parentExpandedSet.keySet()) {
-            Long value = parentExpandedSet.get(key);
-            childExpandedSet.put(key, value);
-        }
-        childState.setExpandedMazeState(childExpandedSet);
     }
 
     /**
@@ -418,10 +397,12 @@ public class AStar extends SearchOperation {
         MazeState childMazeState = null;
         Position currentPosition = parentState.getPosition();
         // Get the upper node
-        child = new Position((currentPosition.getX()-1), currentPosition.getY(), currentPosition
-                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.UP_DIRECTION);
-        childMazeState = new MazeState(child);
-        if (isChildValid(inputMaze, child)) {
+        /*child = new Position((currentPosition.getX()-1), currentPosition.getY(), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.UP_DIRECTION);*/
+        if (inputMaze[(currentPosition.getX()-1)][currentPosition.getY()] != MazeConstant.WALL_MARKER) {
+            child = new Position((currentPosition.getX()-1), currentPosition.getY(), currentPosition
+                    , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.UP_DIRECTION);
+            childMazeState = new MazeState(child);
             cloneGoalSet(parentState, childMazeState);
             if (!expandedMazeState.containsKey(childMazeState)) {
                 children.add(childMazeState);
@@ -429,10 +410,12 @@ public class AStar extends SearchOperation {
         }
 
         // Get the lower node
-        child = new Position((currentPosition.getX()+1), currentPosition.getY(), currentPosition
-                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.DOWN_DIRECTION);
-        childMazeState = new MazeState(child);
-        if (isChildValid(inputMaze, child)) {
+        /*child = new Position((currentPosition.getX()+1), currentPosition.getY(), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.DOWN_DIRECTION);*/
+        if (inputMaze[(currentPosition.getX()+1)][currentPosition.getY()] != MazeConstant.WALL_MARKER) {
+            child = new Position((currentPosition.getX()+1), currentPosition.getY(), currentPosition
+                    , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.DOWN_DIRECTION);
+            childMazeState = new MazeState(child);
             cloneGoalSet(parentState, childMazeState);
             if (!expandedMazeState.containsKey(childMazeState)) {
                 children.add(childMazeState);
@@ -440,10 +423,12 @@ public class AStar extends SearchOperation {
         }
 
         // Get the left node
-        child = new Position(currentPosition.getX(), (currentPosition.getY()-1), currentPosition
-                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);
-        childMazeState = new MazeState(child);
-        if (isChildValid(inputMaze, child)) {
+        /*child = new Position(currentPosition.getX(), (currentPosition.getY()-1), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);*/
+        if (inputMaze[currentPosition.getX()][(currentPosition.getY()-1)] != MazeConstant.WALL_MARKER) {
+            child = new Position(currentPosition.getX(), (currentPosition.getY()-1), currentPosition
+                    , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.LEFT_DIRECTION);
+            childMazeState = new MazeState(child);
             cloneGoalSet(parentState, childMazeState);
             if (!expandedMazeState.containsKey(childMazeState)) {
                 children.add(childMazeState);
@@ -451,10 +436,12 @@ public class AStar extends SearchOperation {
         }
 
         // Get the right node
-        child = new Position(currentPosition.getX(), (currentPosition.getY()+1), currentPosition
-                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
-        childMazeState = new MazeState(child);
-        if (isChildValid(inputMaze, child)) {
+        /*child = new Position(currentPosition.getX(), (currentPosition.getY()+1), currentPosition
+                , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);*/
+        if (inputMaze[currentPosition.getX()][(currentPosition.getY()+1)] != MazeConstant.WALL_MARKER) {
+            child = new Position(currentPosition.getX(), (currentPosition.getY()+1), currentPosition
+                    , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
+            childMazeState = new MazeState(child);
             cloneGoalSet(parentState, childMazeState);
             if (!expandedMazeState.containsKey(childMazeState)) {
                 children.add(childMazeState);
@@ -477,19 +464,25 @@ public class AStar extends SearchOperation {
             , TreeMap<MazeState, Long> openMazeState, Map<MazeState,Long> expandedMazeState
             , long heuristicCost) {
         long approachedCost = (parentMaze.getApproachableCost() + 1);
+        //long totalHeuristicCost = (approachedCost + heuristicCost);
+        // Initialize default field
+        childMaze.setParent(parentMaze);
+        childMaze.setApproachableCost(approachedCost);
+        childMaze.setEdgeCost( (childMaze.getApproachableCost() + heuristicCost) );
         // Check if it is in open list
         if (!openMazeState.containsKey(childMaze)) {
-            childMaze.setParent(parentMaze);
-            childMaze.setApproachableCost(approachedCost);
-            childMaze.setEdgeCost( (childMaze.getApproachableCost() + heuristicCost) );
             openMazeState.put(childMaze, childMaze.getApproachableCost());
         } else if (openMazeState.containsKey(childMaze)) {
+            //System.out.println("Matches " + childMaze);
+            //System.out.println("approachedCost" + approachedCost);
+            //System.out.println("openMazeState.get(childMaze) " + openMazeState.get(childMaze));
             if (approachedCost < openMazeState.get(childMaze)) {
-                childMaze.setParent(parentMaze);
-                childMaze.setApproachableCost(approachedCost);
-                childMaze.setEdgeCost( (childMaze.getApproachableCost() + heuristicCost) );
-                childMaze.setGoalSet(parentMaze.getGoalSet());
+                //System.out.println("B4 remove ");
+                // Remove old child maze
+                openMazeState.remove(childMaze);
+                //System.out.println("After remove " + openMazeState);
                 openMazeState.put(childMaze, childMaze.getApproachableCost());
+                //System.out.println("After adding new " + openMazeState);
             }
         }
         /* //long totalHeuristicCost = approachedCost + heuristicCost;
@@ -793,6 +786,9 @@ class MazeStateComparator implements Comparator<MazeState> {
 
     @Override
     public int compare(MazeState o1, MazeState o2) {
-        return (o1.getEdgeCost() <= o2.getEdgeCost() ? -1 : 1);
+        if (o1.equals(o2)) {
+            return 0;
+        }
+        return (o1.getEdgeCost() < o2.getEdgeCost() ? -1 : 1);
     }
 }

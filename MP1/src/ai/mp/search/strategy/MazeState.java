@@ -1,7 +1,5 @@
 package ai.mp.search.strategy;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,10 +29,6 @@ public class MazeState {
      * It holds the cost of reaching this node from start node.
      */
     private long approachableCost;
-    /**
-     * It holds the expanded set for this maze.
-     */
-    private Map<MazeState,Long> expandedMazeState;
 
     MazeState(Position position) {
         this.position = position;
@@ -43,7 +37,7 @@ public class MazeState {
     @Override
     public String toString() {
         return "MazeState [position=" + position + ", edgeCost=" + edgeCost
-                + ",goal size=" + goalSet.size() + "]\n";
+                + ",goal set=" + goalSet + "]\n";
     }
 
     @Override
@@ -112,14 +106,6 @@ public class MazeState {
 
     public void setEdgeCost(long edgeCost) {
         this.edgeCost = edgeCost;
-    }
-
-    public Map<MazeState, Long> getExpandedMazeState() {
-        return expandedMazeState;
-    }
-
-    public void setExpandedMazeState(Map<MazeState, Long> expandedMazeState) {
-        this.expandedMazeState = expandedMazeState;
     }
 
 }

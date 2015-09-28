@@ -61,6 +61,14 @@ public class Position implements Comparable<Position> {
      * It indicates whether position was already explored or not.
      */
     private boolean isVisited;
+    /**
+     * It represents the ghost position at that particular point in time.
+     */
+    private Position myGhost;
+    /**
+     * It includes penalty incurred for these position.
+     */
+    private long penalty;
 
     Position(int x, int y, Position parent, long cost, long approachableCost, int direction) {
         this.x = x;
@@ -132,12 +140,28 @@ public class Position implements Comparable<Position> {
         this.edgeCost = edgeCost;
     }
 
+    public long getPenalty() {
+        return penalty;
+    }
+
+    public void setPenalty(long penalty) {
+        this.penalty = penalty;
+    }
+
     public boolean isVisited() {
         return isVisited;
     }
 
     public void setVisited(boolean isVisited) {
         this.isVisited = isVisited;
+    }
+
+    public Position getMyGhost() {
+        return myGhost;
+    }
+
+    public void setMyGhost(Position myGhost) {
+        this.myGhost = myGhost;
     }
 
     @Override

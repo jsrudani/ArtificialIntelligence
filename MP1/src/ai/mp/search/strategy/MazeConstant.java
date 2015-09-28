@@ -20,7 +20,7 @@ public class MazeConstant {
         + "1. Include PENALTY turns \n"
         + "2. Play with GHOST \n"
         + "3. Multiple GOAL state \n"
-        + "4. Suboptimal search \n"
+        + "4. Penalty with our heuristic \n"
         + "5. PATH finding";
 
     public static final int EXPECTED_USER_SEARCH_TYPE_INPUT_COUNT = 4;

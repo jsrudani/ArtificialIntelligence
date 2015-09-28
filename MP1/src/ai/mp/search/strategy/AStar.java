@@ -59,6 +59,12 @@ public class AStar extends SearchOperation {
                 , MazeConstant.DEFAULT_COST, MazeConstant.DEFAULT_COST, MazeConstant.RIGHT_DIRECTION);
         Preprocessing.getStartPosition().setFacing(rightFacing);
 
+        // Associate ghost position with start node
+        Preprocessing.getStartPosition().setMyGhost(Preprocessing.getGhostPosition());
+        if (Preprocessing.isGhost() && checkAndInitializeGhostDirection(Preprocessing.getGhostPosition())) {
+            Preprocessing.getStartPosition().setMyGhost(Preprocessing.getGhostPosition());
+        }
+        Preprocessing.getStartPosition().setMyGhost(Preprocessing.getGhostPosition());
         // Add the start position into open position
         openPosition.put(Preprocessing.getStartPosition(),Preprocessing.getStartPosition().getApproachableCost());
 
@@ -68,13 +74,13 @@ public class AStar extends SearchOperation {
         } else if (Preprocessing.isPenalty()) {
             findPathUsingPenalty(openPosition, expandedPosition, MazeConstant.TURN_COST, MazeConstant.FORWARD_COST);
         } else if (Preprocessing.isGhost()) {
-            checkAndInitializeGhostDirection(Preprocessing.getGhostPosition());
             findPathAvoidGhost(openPosition, expandedPosition, Preprocessing.getGhostPosition(), debugMatrix);
-        } else if (Preprocessing.isMultipleGoal() && !Preprocessing.isSuboptimalSearch()) {
+        } else if (Preprocessing.isMultipleGoal()) {
             findPathThroughMultipleGoals(Preprocessing.getStartPosition(), Preprocessing.getGoalSet());
-        } else if (Preprocessing.isSuboptimalSearch()) {
-            /*findPathForSuboptimalSearch(Preprocessing.getStartPosition(), Preprocessing.getGoalSet(), openPosition
-                    , expandedPosition);*/
+        } else if (Preprocessing.isOurHeuristic()) {
+            findPathUsingPenalty(openPosition, expandedPosition, MazeConstant.TURN_COST, MazeConstant.FORWARD_COST);
+            /*findPathUsingOurHeuristicForSuboptimalSearch(openPosition, expandedPosition
+             * , MazeConstant.TURN_COST, MazeConstant.FORWARD_COST);*/
         }
     }
 
@@ -141,6 +147,7 @@ public class AStar extends SearchOperation {
 
                 // Calculate penalty
                 long penalty = calculatePenalty(currentPosition, turnCost, forwardCost);
+                currentPosition.setPenalty(penalty);
 
                 // Mark as visited by inserting into expanded list
                 expandedPosition.put(currentPosition,currentPosition.getApproachableCost());
@@ -157,6 +164,7 @@ public class AStar extends SearchOperation {
             MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
             this.stepCost = metrics.getStepCost();
             this.solutionCost = metrics.getSolutionCost();
+            System.out.println("Penalty cost " + metrics.getPenalty());
         }
     }
 
@@ -169,12 +177,17 @@ public class AStar extends SearchOperation {
      */
     private void findPathAvoidGhost(TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition
                                 , Position ghostPosition, char [][] debugMatrix) {
+
         Position currentPosition = null;
         int [][] visited = new int [inputMaze.length][inputMaze[0].length];
+
         // Traverse till openPosition is not empty and get the position with lowest heuristic value.
         while (!openPosition.isEmpty()) {
-            ghostPosition = Preprocessing.getGhostPosition();
+
+            //ghostPosition = Preprocessing.getGhostPosition();
             currentPosition = openPosition.pollFirstEntry().getKey();
+            // Get the ghost position associated with pacman
+            ghostPosition = currentPosition.getMyGhost();
             displayCharArray(debugMatrix, currentPosition, ghostPosition);
             if (inputMaze[currentPosition.getX()][currentPosition.getY()] == MazeConstant.GOAL_POSITION_MARKER) {
                 isGoalReached = true;
@@ -182,19 +195,18 @@ public class AStar extends SearchOperation {
             } else {
                 visited[currentPosition.getX()][currentPosition.getY()] = 1;
 
+                // Mark as visited by inserting into expanded list
+                expandedPosition.put(currentPosition,currentPosition.getApproachableCost());
+                // Increment the nodes expanded
+                nodesExpanded += 1;
+
                 // Check if there is ghost or not
-                if (checkForGhostAndMoveGhost(currentPosition, ghostPosition)
-                        || currentPosition.equals(Preprocessing.getGhostPosition())) {
+                if (checkForGhostAndMoveGhost(currentPosition, ghostPosition) ) {
+                        //|| currentPosition.equals(Preprocessing.getGhostPosition())) {
                     //System.out.println("Pacman " + currentPosition + " Direction " + currentPosition.getDirection());
                     //System.out.println("Ghost " + Preprocessing.getGhostPosition() + " Direction " + Preprocessing.getGhostPosition().getDirection());
                     continue;
                 }
-
-                // Mark as visited by inserting into expanded list
-                expandedPosition.put(currentPosition,currentPosition.getApproachableCost());
-
-                // Increment the nodes expanded
-                nodesExpanded += 1;
 
                 // Get the successor node
                 getSuccessorNode(currentPosition, openPosition, expandedPosition, MazeConstant.DEFAULT_PENALTY);
@@ -273,7 +285,7 @@ public class AStar extends SearchOperation {
                     long edgeCost = spanningTree.buildMST();
                     // Set the cost of each child to edge cost
                     calculateHeuristicAndUpdateCost(currentMazeState, eachMazeChild
-                            , openMazeState, expandedMazeState, (edgeCost * 3));
+                            , openMazeState, expandedMazeState, (edgeCost * 2));
                     //System.out.println("eachMazeChild " + eachMazeChild);
                 }
                 //System.out.println("===========================================");
@@ -326,66 +338,6 @@ public class AStar extends SearchOperation {
         }
         childState.setGoalSet(childGoalSet);
     }
-
-    /**
-     * It is used to find sub-optimal path through all search dots.
-     * 
-     * @param goalSet
-     */
-/*    private void findPathForSuboptimalSearch(Position startPosition, Set<Position> goalSet, TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition) {
-
-        Position currentPosition;
-        // Add to open position
-        openPosition.put(startPosition, startPosition.getCost());
-        // Loop till all dots are covered
-        while (!goalSet.isEmpty()) {
-            currentPosition = openPosition.pollFirstEntry().getKey();
-            // Check if best next neighbor is goal
-            if (goalSet.contains(currentPosition)) {
-                goalSet.remove(currentPosition);
-                // Draw solution path from current goal to start position
-                this.solutionMaze[currentPosition.getX()][currentPosition.getY()] = 'P';
-                MazeMetrics metrics = drawSolutionPath(this.getSolutionMaze(), currentPosition);
-                //System.out.println("Before updating step cost " + this.stepCost);
-                //System.out.println("metrics.getStepCost() " + metrics.getStepCost());
-                this.stepCost += metrics.getStepCost();
-                //System.out.println("After updating step cost " + this.getStepCost());
-                this.solutionCost += metrics.getSolutionCost();
-                MazeSearch.displayCharArray(this.getSolutionMaze());
-                //System.out.println("Step-----> " + this.getStepCost());
-                // Clear the expanded set and open set to start fresh from new start point
-                expandedPosition.clear();
-                openPosition.clear();
-                // Add the current goal as new start point in open position and also reset
-                // its parent pointer else it would be count twice
-                currentPosition.setParent(null);
-                currentPosition.setApproachableCost(0L);
-                openPosition.put(currentPosition, currentPosition.getApproachableCost());
-                if (goalSet.isEmpty())
-                    break;
-            } else {
-                // Expand the current node
-                expandedPosition.put(currentPosition, currentPosition.getApproachableCost());
-                // Increment nodes expanded
-                nodesExpanded += 1;
-                // Find the child position
-                List<Position> children = getValidChildPosition(currentPosition, expandedPosition);
-                Iterator<Position> child = children.iterator();
-                // Build MST for each child
-                while (child.hasNext()) {
-                    Position eachChild = child.next();
-                    // Build the MST for child and goal set
-                    System.out.println("Child " + eachChild);
-                    MST spanningTree = new MST(eachChild, goalSet);
-                    long edgeCost = spanningTree.buildMST();
-                    // Set the cost of each child to edge cost
-                    calculateHeuristicAndUpdateCost(currentPosition, eachChild
-                            , openPosition, expandedPosition, (edgeCost * 2));
-                }
-                System.out.println("----------------------------");
-            }
-        }
-    }*/
 
     /**
      * It is used to return all valid position possible from given position
@@ -488,18 +440,6 @@ public class AStar extends SearchOperation {
                 //System.out.println("After adding new " + openMazeState);
             }
         }
-        /* //long totalHeuristicCost = approachedCost + heuristicCost;
-        if (!openMazeState.containsKey(childMaze) || approachedCost < openMazeState.get(childMaze)) {
-            childMaze.setParent(parentMaze);
-            childMaze.setApproachableCost(approachedCost);
-            childMaze.setEdgeCost( (childMaze.getApproachableCost() + heuristicCost) );
-            if (approachedCost < openMazeState.get(childMaze)) {
-                childMaze.setGoalSet(parentMaze.getGoalSet());
-            }
-            if (!openMazeState.containsKey(childMaze)) {
-                openMazeState.put(childMaze, childMaze.getApproachableCost());
-            }
-        }*/
     }
 
     /**
@@ -513,14 +453,52 @@ public class AStar extends SearchOperation {
     private boolean checkForGhostAndMoveGhost(Position pacman, Position ghost) {
         boolean dangerPosition = false;
         // Check whether next move of ghost is valid or not and change direction accordingly
-        checkAndInitializeGhostDirection(ghost);
-        ghost = Preprocessing.getGhostPosition();
-        if (pacman.equals(ghost) && pacman.getDirection() != ghost.getDirection()) {
+        if (checkAndInitializeGhostDirection(ghost)) {
+            ghost = Preprocessing.getGhostPosition();
+        }
+        //ghost = Preprocessing.getGhostPosition();
+        // Add condition to check whether successor of parent is possible or not
+        if ( (pacman.equals(ghost) && pacman.getDirection() != ghost.getDirection())
+                ||(pacman.getParent() != null && pacman.getParent().getMyGhost().equals(pacman) && isDirectionOpposite(pacman))) {
             dangerPosition = true;
         }
         // Move the ghost even if pacman knows that its not a valid position
         moveGhost(ghost);
         return dangerPosition;
+    }
+
+    /**
+     * It is used to check whether pacman and ghost are in opposite direction or not
+     * 
+     * @param pacman
+     * @return boolean
+     */
+    private boolean isDirectionOpposite(Position pacman) {
+        boolean isDirectionOpposite = false;
+        // Check if my and my ghost direction are opposite i.e left <-> right or up <-> down
+        switch(pacman.getDirection()) {
+            case MazeConstant.LEFT_DIRECTION :
+                if (pacman.getMyGhost().getDirection() == MazeConstant.RIGHT_DIRECTION) {
+                    isDirectionOpposite = true;
+                }
+                break;
+            case MazeConstant.RIGHT_DIRECTION :
+                if (pacman.getMyGhost().getDirection() == MazeConstant.LEFT_DIRECTION) {
+                    isDirectionOpposite = true;
+                }
+                break;
+            case MazeConstant.UP_DIRECTION :
+                if (pacman.getMyGhost().getDirection() == MazeConstant.DOWN_DIRECTION) {
+                    isDirectionOpposite = true;
+                }
+                break;
+            case MazeConstant.DOWN_DIRECTION :
+                if (pacman.getMyGhost().getDirection() == MazeConstant.UP_DIRECTION) {
+                    isDirectionOpposite = true;
+                }
+                break;
+        }
+        return isDirectionOpposite;
     }
 
     /**
@@ -555,6 +533,9 @@ public class AStar extends SearchOperation {
     private void getSuccessorNode(Position currentPosition, TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition
                           , long penalty) {
         Position child = null;
+        long turns = 0L;
+        // Get the new ghost position and set for each valid successor node
+        Position ghost = Preprocessing.getGhostPosition();
 
         // Get the upper node
         child = new Position((currentPosition.getX()-1), currentPosition.getY(), currentPosition
@@ -562,8 +543,13 @@ public class AStar extends SearchOperation {
         if (isChildValid(inputMaze, child)) {
             // Check if child is already in expanded/open position and if exist compare the overall cost
             if (!expandedPosition.containsKey(child)) {
+                child.setMyGhost(ghost);
+                if (Preprocessing.isOurHeuristic()) {
+                    // Get the number of turns
+                    turns = countAndSetNumberOfTurns(child);
+                }
                 checkExistanceWithLowerCostAndUpdateMap(currentPosition, child
-                        , openPosition, expandedPosition, penalty);
+                        , openPosition, expandedPosition, penalty, turns);
             }
         }
 
@@ -573,8 +559,13 @@ public class AStar extends SearchOperation {
         if (isChildValid(inputMaze, child)) {
             // Check if child is already in expanded/open position and if exist compare the overall cost
             if (!expandedPosition.containsKey(child)) {
+                child.setMyGhost(ghost);
+                if (Preprocessing.isOurHeuristic()) {
+                    // Get the number of turns
+                    turns = countAndSetNumberOfTurns(child);
+                }
                 checkExistanceWithLowerCostAndUpdateMap(currentPosition, child
-                        , openPosition, expandedPosition, penalty);
+                        , openPosition, expandedPosition, penalty, turns);
             }
         }
 
@@ -584,8 +575,13 @@ public class AStar extends SearchOperation {
         if (isChildValid(inputMaze, child)) {
             // Check if child is already in expanded/open position and if exist compare the overall cost
             if (!expandedPosition.containsKey(child)) {
+                child.setMyGhost(ghost);
+                if (Preprocessing.isOurHeuristic()) {
+                    // Get the number of turns
+                    turns = countAndSetNumberOfTurns(child);
+                }
                 checkExistanceWithLowerCostAndUpdateMap(currentPosition, child
-                        , openPosition, expandedPosition, penalty);
+                        , openPosition, expandedPosition, penalty, turns);
             }
         }
 
@@ -595,10 +591,62 @@ public class AStar extends SearchOperation {
         if (isChildValid(inputMaze, child)) {
             // Check if child is already in expanded/open position and if exist compare the overall cost
             if (!expandedPosition.containsKey(child)) {
+                child.setMyGhost(ghost);
+                if (Preprocessing.isOurHeuristic()) {
+                    // Get the number of turns
+                    turns = countAndSetNumberOfTurns(child);
+                }
                 checkExistanceWithLowerCostAndUpdateMap(currentPosition, child
-                        , openPosition, expandedPosition, penalty);
+                        , openPosition, expandedPosition, penalty, turns);
             }
         }
+    }
+
+    /**
+     * It is used to predict the number of turn in future
+     * 
+     * @param currentPosition
+     * @return long
+     */
+    private long countAndSetNumberOfTurns(Position currentPosition) {
+        long turnCount = 0L;
+        int xPos = 0;
+        int yPos = 0;
+        switch(currentPosition.getDirection()) {
+            case MazeConstant.LEFT_DIRECTION :
+                xPos = currentPosition.getX();
+                yPos = (currentPosition.getY() - 1);
+                while (inputMaze[xPos][yPos] != MazeConstant.WALL_MARKER) {
+                    turnCount += 1;
+                    yPos -= 1;
+                }
+                break;
+            case MazeConstant.RIGHT_DIRECTION :
+                xPos = currentPosition.getX();
+                yPos = (currentPosition.getY() + 1);
+                while (inputMaze[xPos][yPos] != MazeConstant.WALL_MARKER) {
+                    turnCount += 1;
+                    yPos += 1;
+                }
+                break;
+            case MazeConstant.UP_DIRECTION :
+                xPos = (currentPosition.getX() - 1);
+                yPos = currentPosition.getY();
+                while (inputMaze[xPos][yPos] != MazeConstant.WALL_MARKER) {
+                    turnCount += 1;
+                    xPos -= 1;
+                }
+                break;
+            case MazeConstant.DOWN_DIRECTION :
+                xPos = (currentPosition.getX() + 1);
+                yPos = currentPosition.getY();
+                while (inputMaze[xPos][yPos] != MazeConstant.WALL_MARKER) {
+                    turnCount += 1;
+                    xPos += 1;
+                }
+                break;
+        }
+        return turnCount;
     }
 
     /**
@@ -606,7 +654,8 @@ public class AStar extends SearchOperation {
      * 
      */
     private void checkExistanceWithLowerCostAndUpdateMap(Position parentNode, Position childNode
-            , TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition, long penalty) {
+            , TreeMap<Position, Long> openPosition, Map<Position,Long> expandedPosition
+            , long penalty, long turns) {
 
         // Add the penalty as current node approached cost. Since it will include penalty to reach current node
         long approachedCost = penalty + (parentNode.getApproachableCost() + 1);
@@ -614,7 +663,7 @@ public class AStar extends SearchOperation {
         if (!openPosition.containsKey(childNode) || approachedCost < openPosition.get(childNode)) {
             childNode.setParent(parentNode);
             childNode.setApproachableCost(approachedCost);
-            childNode.setCost( (childNode.getApproachableCost() + heuristicCost) );
+            childNode.setCost( (childNode.getApproachableCost() + heuristicCost + turns) );
             if (!openPosition.containsKey(childNode)) {
                 openPosition.put(childNode, childNode.getApproachableCost());
             }
@@ -690,8 +739,9 @@ public class AStar extends SearchOperation {
      * direction is changed to opposite direction.
      *  
      * @param ghost
+     * @return boolean
      */
-    private void checkAndInitializeGhostDirection(Position ghost) {
+    private boolean checkAndInitializeGhostDirection(Position ghost) {
         Position newGhostPosition = ghost;
         boolean isGhostPositionUpdated = false;
         switch (ghost.getDirection()) {
@@ -713,6 +763,7 @@ public class AStar extends SearchOperation {
         if (isGhostPositionUpdated) {
             Preprocessing.setGhostPosition(newGhostPosition);
         }
+        return isGhostPositionUpdated;
     }
 
     @Override

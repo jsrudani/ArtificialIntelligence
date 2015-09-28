@@ -69,15 +69,20 @@ abstract class SearchOperation {
     public MazeMetrics drawSolutionPath(char[][] solutionMaze, Position childNode) {
         long stepCost = 0L;
         long solutionCost = 0L;
+        long penalty = 0L;
         while (childNode != null && childNode.getParent() != null) {
             if (solutionMaze[childNode.getX()][childNode.getY()] < 48) {
                 solutionMaze[childNode.getX()][childNode.getY()] = '.';
             }
             solutionCost += childNode.getCost();
+            penalty += childNode.getPenalty();
             //System.out.println("child node " + childNode + "approach cost " + childNode.getApproachableCost());
             childNode = childNode.getParent();
             stepCost += 1;
         }
-        return new MazeMetrics(stepCost, solutionCost);
+        if (childNode != null) {
+            penalty += childNode.getPenalty();
+        }
+        return new MazeMetrics(stepCost, solutionCost, penalty);
     }
 }

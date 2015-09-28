@@ -46,7 +46,7 @@ public class Preprocessing {
     private static boolean isPenalty = false;
     private static boolean isGhost = false;
     private static boolean isMultipleGoal = false;
-    private static boolean isSuboptimalSearch = false;
+    private static boolean isOurHeuristic = false;
     private static boolean isPathFind = false;
 
     public static void processUserInput (int userInput) {
@@ -61,8 +61,7 @@ public class Preprocessing {
                 isMultipleGoal = true;
                 break;
             case 4:
-                isSuboptimalSearch = true;
-                isMultipleGoal = true;
+                isOurHeuristic = true;
                 break;
             case 5:
                 isPathFind = true;
@@ -171,12 +170,12 @@ public class Preprocessing {
         return isMultipleGoal;
     }
 
-    public static boolean isSuboptimalSearch() {
-        return isSuboptimalSearch;
-    }
-
     public static boolean isPathFind() {
         return isPathFind;
+    }
+
+    public static boolean isOurHeuristic() {
+        return isOurHeuristic;
     }
 
     public static int[][] getPreprocessedMaze() {

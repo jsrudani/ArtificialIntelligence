@@ -62,10 +62,6 @@ public class Position implements Comparable<Position> {
      */
     private boolean isVisited;
     /**
-     * It represents the ghost position at that particular point in time.
-     */
-    private Position myGhost;
-    /**
      * It includes penalty incurred for these position.
      */
     private long penalty;
@@ -154,14 +150,6 @@ public class Position implements Comparable<Position> {
 
     public void setVisited(boolean isVisited) {
         this.isVisited = isVisited;
-    }
-
-    public Position getMyGhost() {
-        return myGhost;
-    }
-
-    public void setMyGhost(Position myGhost) {
-        this.myGhost = myGhost;
     }
 
     @Override

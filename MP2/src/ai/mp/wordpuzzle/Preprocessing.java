@@ -119,7 +119,7 @@ public class Preprocessing {
             try (BufferedReader br = new BufferedReader(new FileReader(worldListFilename))) {
                 String line = null;
                 while ((line = br.readLine()) != null) {
-                    System.out.println(line);
+                    //System.out.println(line);
                     populateCategoryToLetterWordMap(line);
                     //System.out.println(CategoryToLetterWordMap);
                     //System.out.println("==================");

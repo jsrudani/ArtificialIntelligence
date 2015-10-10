@@ -1,5 +1,6 @@
 package ai.mp.wordpuzzle;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,9 +47,16 @@ public class SolveWordPuzzle {
             int variable = orderedVariables[orderedVariableIdx];
             // Get the domain value for this variable
             Set<Character> domainValues = getDomainValue(variable, defaultCategoryToLetterWordMap);
+
+            // Debug
+            System.out.println("====================================");
+            System.out.println("Variable " + variable);
+            System.out.println("Domain values " + domainValues);
+
             // Check if there exist domain values
             if (domainValues.isEmpty()) {
                 // Backtrack print the path
+                System.out.println("Backtrack ");
                 printPath(parent);
             } else {
                 // Update the default map according to domain value
@@ -56,8 +64,10 @@ public class SolveWordPuzzle {
                         updateCategoryToLetterWordMap(variable, domainValues, defaultCategoryToLetterWordMap);
                 // After consistency check assign current value and iterate for another variable
                 for (Character ch : domainValues) {
+                    System.out.println("Assign " + ch + " for variable " + variable);
                     Node child = new Node(ch.toString());
                     child.setParent(parent);
+                    System.out.println("====================================");
                     solve(child, orderedVariables, (orderedVariableIdx + 1), updatedCategoryToLetterWordMap);
                 }
             }
@@ -84,6 +94,12 @@ public class SolveWordPuzzle {
         // For each category get the corresponding index position and set of letter at that index position
         for (String category : categories) {
             int categoryIdx = indexToCategoryMap.get(variable).get(category);
+
+            // Debug
+            System.out.println("Category " + category + " For index " + categoryIdx);
+            System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx) );
+            System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet() );
+
             // Add the set of characters at category index to intersect set
             if (!intersectValue.isEmpty()) {
                 intersectValue.retainAll( (defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet()) );
@@ -103,27 +119,103 @@ public class SolveWordPuzzle {
      * 
      * @return updated map to be used by other variables
      */
-    private Map<String,Map<Integer,Map<Character,List<String>>>> updateCategoryToLetterWordMap(int variable, Set<Character> intersectValue
+    private Map<String,Map<Integer,Map<Character,List<String>>>> updateCategoryToLetterWordMap(int variable
+            ,Set<Character> intersectValue
             , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
+
+        // Debug
+        System.out.println("updation progress " + defaultCategoryToLetterWordMap);
+
         // Get the set of categories belong to this variable (index)
         Set<String> categories = indexToCategoryMap.get(variable).keySet();
+
         // Clone the defaultCategoryToLetterWordMap
-        Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone =
-                new HashMap<String,Map<Integer,Map<Character,List<String>>>>();
-        defaultCategoryToLetterWordMapClone.putAll(defaultCategoryToLetterWordMap);
+        Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone
+                = cloneCategoryToLetterWordMap(defaultCategoryToLetterWordMap);
+
         // For each category get the corresponding index position and set of letter at that index position
         for (String category : categories) {
             int categoryIdx = indexToCategoryMap.get(variable).get(category);
-            // Clear the content of category in default map
-            defaultCategoryToLetterWordMapClone.get(category).get(categoryIdx).clear();
+            // Clear the old letter to word map
+            for(int i = 0; i < WordPuzzleConstant.WORD_LEN;i++) {
+                defaultCategoryToLetterWordMapClone.get(category).get(i).clear();
+            }
             // For each intersect value update the corresponding category
             for (Character ch : intersectValue) {
                 // Get the word list from default map
                 List<String> charToWordList
-                = defaultCategoryToLetterWordMap.get(category).get(categoryIdx).get(ch);
+                        = defaultCategoryToLetterWordMap.get(category).get(categoryIdx).get(ch);
+                System.out.println("Old word list for char " + ch + " list " + charToWordList);
                 // Put only word list w.r.t word in a map
-                defaultCategoryToLetterWordMapClone.get(category).get(categoryIdx).put(ch, charToWordList);
+                populateCategoryToLetterWordMap(charToWordList,category,defaultCategoryToLetterWordMapClone);
             }
+            System.out.println("Updated map for category " + category + " for index " + categoryIdx);
+            System.out.println(defaultCategoryToLetterWordMapClone.get(category));
+        }
+
+        return defaultCategoryToLetterWordMapClone;
+    }
+
+    /**
+     * It is used to update the character to word list as per new domain value for each category.
+     * 
+     * @param charToWordList
+     * @param category
+     * @param defaultCategoryToLetterWordMapClone
+     */
+    private void populateCategoryToLetterWordMap(List<String> charToWordList, String category
+            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone) {
+
+        Map<Integer, Map<Character,List<String> > > indexToLetterWordMap = defaultCategoryToLetterWordMapClone.get(category);
+
+        Map<Character,List<String>> letterToWordListMap = null;
+
+        for (String word : charToWordList) {
+            int charIdx = 0;
+            while (charIdx < word.length()) {
+                letterToWordListMap = indexToLetterWordMap.get(charIdx);
+                char c = word.charAt(charIdx);
+                if (letterToWordListMap.containsKey(c)) {
+                    letterToWordListMap.get(c).add(word);
+                } else {
+                    List<String> wordList = new ArrayList<String>();
+                    wordList.add(word);
+                    letterToWordListMap.put(c, wordList);
+                }
+                indexToLetterWordMap.put(charIdx, letterToWordListMap);
+                charIdx += 1;
+            }
+        }
+        defaultCategoryToLetterWordMapClone.put(category, indexToLetterWordMap);
+    }
+
+    /**
+     * It used to clone the CategoryToLetterWordMap.
+     * 
+     * @param defaultCategoryToLetterWordMap
+     * @return
+     */
+    private Map<String,Map<Integer,Map<Character,List<String>>>> cloneCategoryToLetterWordMap(Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
+
+        // Clone each nested map and list
+        Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone
+                    = new HashMap<String,Map<Integer,Map<Character,List<String>>>>();
+        for (String category : defaultCategoryToLetterWordMap.keySet()) {
+            Map<Integer,Map<Character,List<String>>> tempIdxToCharacterMap
+                                = defaultCategoryToLetterWordMap.get(category);
+            Map<Integer,Map<Character,List<String>>> indexToCharacterMap =
+                    new HashMap<Integer,Map<Character,List<String>>>();
+            for (Integer index : tempIdxToCharacterMap.keySet()) {
+                Map<Character,List<String>> tempCharToWordList = tempIdxToCharacterMap.get(index);
+                Map<Character,List<String>> charToWordList = new HashMap<Character,List<String>>();
+                for (Character ch : tempCharToWordList.keySet()) {
+                    List<String> wordList = new ArrayList<String>();
+                    wordList.addAll(tempCharToWordList.get(ch));
+                    charToWordList.put(ch, wordList);
+                }
+                indexToCharacterMap.put(index, charToWordList);
+            }
+            defaultCategoryToLetterWordMapClone.put(category, indexToCharacterMap);
         }
         return defaultCategoryToLetterWordMapClone;
     }
@@ -139,8 +231,8 @@ public class SolveWordPuzzle {
      */
     private int [] getMostConstraintVariables(Map<Integer,Map<String,Integer>> indexToCategoryMap) {
         int [] mcv = new int[outputArraySize];
-        for (int i = 0;i < mcv.length; i++) {
-            mcv[i] = i;
+        for (int i = 1;i <= mcv.length; i++) {
+            mcv[i-1] = i;
         }
         return mcv;
     }

@@ -41,7 +41,8 @@ public class WordPuzzle {
 
         // Solve the word puzzle
         SolveWordPuzzle solve = new SolveWordPuzzle(preprocess.getCategoryToLetterWordMap()
-                , preprocess.getOutputArraySize());
+                , preprocess.getOutputArraySize()
+                , preprocess.getCategoryToWordsMap());
 
         // Solve by Letter based assignment
         solve.solveByLetterBasedAssignment();

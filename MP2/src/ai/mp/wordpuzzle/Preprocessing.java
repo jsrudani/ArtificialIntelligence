@@ -3,9 +3,11 @@ package ai.mp.wordpuzzle;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -48,6 +50,8 @@ public class Preprocessing {
 
     private Map<String, Map<Integer, Map<Character, List<String> > > > CategoryToLetterWordMap =
             new HashMap<String, Map<Integer, Map<Character,List<String> > > >();
+
+    private Map<String, Set<String>> categoryToWordsMap = new HashMap<String, Set<String>>();
 
     private int outputArraySize;
 
@@ -142,6 +146,7 @@ public class Preprocessing {
                 new HashMap<Integer, Map<Character,List<String>>>();
         Map<Character,List<String>> letterToWordListMap = null;
         List<String> wordList;
+        Set<String> wordSet = new LinkedHashSet<String>();
 
         String [] lineSubpart = line.split(WordPuzzleConstant.COLON);
         String categoryName = lineSubpart[0].trim();
@@ -155,6 +160,7 @@ public class Preprocessing {
 
         for (String word : words) {
             word = word.trim();
+            wordSet.add(word);
             //System.out.println("Word " + word);
             int charIdx = 0;
             while (charIdx < word.length()) {
@@ -172,6 +178,8 @@ public class Preprocessing {
         }
         // Store the index->letter->word combination into category map
         CategoryToLetterWordMap.put(categoryName, indexToLetterWordMap);
+        // Store the Category->Word set into categoryToWordsMap
+        categoryToWordsMap.put(categoryName, wordSet);
     }
 
     public static Map<Integer, Map<String, Integer>> getIndexToCategoryMap() {
@@ -184,5 +192,9 @@ public class Preprocessing {
 
     public int getOutputArraySize() {
         return outputArraySize;
+    }
+
+    public Map<String, Set<String>> getCategoryToWordsMap() {
+        return categoryToWordsMap;
     }
 }

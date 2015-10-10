@@ -21,12 +21,16 @@ public class SolveWordPuzzle {
 
     private static Map<Integer,Map<String,Integer>> indexToCategoryMap = Preprocessing.getIndexToCategoryMap();
     private Map<String, Map<Integer, Map<Character, List<String> > > > defaultCategoryToLetterWordMap;
+    private Map<String, Set<String>> categoryToWordsMap;
     private int outputArraySize;
+    private Map<String, List<Character>> categoryToCharMap = new HashMap<String, List<Character>>();
 
     SolveWordPuzzle(Map<String, Map<Integer, Map<Character, List<String> > > > categoryToLetterWordMap
-            , final int outputArraySize) {
+            , final int outputArraySize
+            , Map<String, Set<String>> categoryToWordsMap) {
         this.defaultCategoryToLetterWordMap = categoryToLetterWordMap;
         this.outputArraySize = outputArraySize;
+        this.categoryToWordsMap = categoryToWordsMap;
     }
 
     /**
@@ -67,12 +71,21 @@ public class SolveWordPuzzle {
                     System.out.println("Assign " + ch + " for variable " + variable);
                     Node child = new Node(ch.toString());
                     child.setParent(parent);
+                    // consistency check
+                    if (!isConsistent(ch, variable)) {
+                        System.out.println("Not consistent ");
+                        printPath(child);
+                        continue;
+                    }
                     System.out.println("====================================");
                     solve(child, orderedVariables, (orderedVariableIdx + 1), updatedCategoryToLetterWordMap);
+                    // Remove the previous assignment
+                    removePreviousAssignment(ch, variable);
                 }
             }
         } else {
             // Success print path
+            System.out.println("Sucess path ");
             printPath(parent);
         }
     }
@@ -145,7 +158,7 @@ public class SolveWordPuzzle {
                 // Get the word list from default map
                 List<String> charToWordList
                         = defaultCategoryToLetterWordMap.get(category).get(categoryIdx).get(ch);
-                System.out.println("Old word list for char " + ch + " list " + charToWordList);
+                //System.out.println("Old word list for char " + ch + " list " + charToWordList);
                 // Put only word list w.r.t word in a map
                 populateCategoryToLetterWordMap(charToWordList,category,defaultCategoryToLetterWordMapClone);
             }
@@ -154,6 +167,78 @@ public class SolveWordPuzzle {
         }
 
         return defaultCategoryToLetterWordMapClone;
+    }
+
+    /**
+     * It is used to perform forward checking. It is used to validate whether word formed by
+     * assigning character is valid for given category.
+     * 
+     * @param ch
+     * @param variable
+     * @return boolean
+     */
+    private boolean isConsistent(Character ch, int variable) {
+
+        boolean isRemove = false;
+        // Get the set of categories belong to this variable (index)
+        Set<String> categories = indexToCategoryMap.get(variable).keySet();
+        for (String category : categories) {
+            System.out.println("Before consistency check for category " + category);
+            // Check if category exist in categoryToWordMap
+            if (categoryToCharMap.containsKey(category)) {
+                categoryToCharMap.get(category).add(ch);
+                System.out.println(" Current allocation "
+                        + categoryToCharMap.get(category)
+                        + " for category " + category);
+                // Check if category is filled with all character
+                if (categoryToCharMap.get(category).size() == WordPuzzleConstant.WORD_LEN) {
+                    StringBuilder word = new StringBuilder();
+                    word.append(categoryToCharMap.get(category).get(0));
+                    word.append(categoryToCharMap.get(category).get(1));
+                    word.append(categoryToCharMap.get(category).get(2));
+                    System.out.println("isConsistent word " + word.toString() + " for category " + category);
+                    // Check if word is valid
+                    if (!categoryToWordsMap.get(category).contains(word.toString())) {
+                        categoryToCharMap.get(category).remove(ch);
+                        isRemove = true;
+                        break;
+                    }
+                }
+            } else {
+                List<Character> charList = new ArrayList<Character>();
+                charList.add(ch);
+                categoryToCharMap.put(category, charList);
+            }
+        }
+        if (isRemove) {
+            for (String category : categories) {
+                // Check if category exist in categoryToWordMap
+                if (categoryToCharMap.containsKey(category)) {
+                    categoryToCharMap.get(category).remove(ch);
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * It is used to remove the previous assignment since we need to find all the possible solution
+     * 
+     * @param ch
+     * @param variable
+     */
+    private void removePreviousAssignment(Character ch, int variable) {
+
+        // Get the set of categories belong to this variable (index)
+        Set<String> categories = indexToCategoryMap.get(variable).keySet();
+        for (String category : categories) {
+            // Check if category exist in categoryToWordMap
+            if (categoryToCharMap.containsKey(category)) {
+                // remove the assignment
+                categoryToCharMap.get(category).remove(ch);
+            }
+        }
     }
 
     /**

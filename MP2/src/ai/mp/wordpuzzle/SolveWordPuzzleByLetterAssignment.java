@@ -8,16 +8,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class is responsible to solve word puzzle by following two technique
+ * This class is responsible to solve word puzzle by following technique
  * <pre>
  * 1. Letter based assignment
- * 2. Word based assignment
  * </pre>
  * 
  * @author rudani2
  *
  */
-public class SolveWordPuzzle {
+public class SolveWordPuzzleByLetterAssignment {
 
     private static Map<Integer,Map<String,Integer>> indexToCategoryMap = Preprocessing.getIndexToCategoryMap();
     private Map<String, Map<Integer, Map<Character, List<String> > > > defaultCategoryToLetterWordMap;
@@ -25,7 +24,7 @@ public class SolveWordPuzzle {
     private int outputArraySize;
     private Map<String, List<Character>> categoryToCharMap = new HashMap<String, List<Character>>();
 
-    SolveWordPuzzle(Map<String, Map<Integer, Map<Character, List<String> > > > categoryToLetterWordMap
+    SolveWordPuzzleByLetterAssignment(Map<String, Map<Integer, Map<Character, List<String> > > > categoryToLetterWordMap
             , final int outputArraySize
             , Map<String, Set<String>> categoryToWordsMap) {
         this.defaultCategoryToLetterWordMap = categoryToLetterWordMap;
@@ -53,9 +52,9 @@ public class SolveWordPuzzle {
             Set<Character> domainValues = getDomainValue(variable, defaultCategoryToLetterWordMap);
 
             // Debug
-            System.out.println("====================================");
-            System.out.println("Variable " + variable);
-            System.out.println("Domain values " + domainValues);
+            //System.out.println("====================================");
+            //System.out.println("Variable " + variable);
+            //System.out.println("Domain values " + domainValues);
 
             // Check if there exist domain values
             if (domainValues.isEmpty()) {
@@ -68,16 +67,16 @@ public class SolveWordPuzzle {
                         updateCategoryToLetterWordMap(variable, domainValues, defaultCategoryToLetterWordMap);
                 // After consistency check assign current value and iterate for another variable
                 for (Character ch : domainValues) {
-                    System.out.println("Assign " + ch + " for variable " + variable);
+                    //System.out.println("Assign " + ch + " for variable " + variable);
                     Node child = new Node(ch.toString());
                     child.setParent(parent);
                     // consistency check
                     if (!isConsistent(ch, variable)) {
-                        System.out.println("Not consistent ");
-                        printPath(child);
+                        //System.out.println("Not consistent ");
+                        //printPath(child);
                         continue;
                     }
-                    System.out.println("====================================");
+                    //System.out.println("====================================");
                     solve(child, orderedVariables, (orderedVariableIdx + 1), updatedCategoryToLetterWordMap);
                     // Remove the previous assignment
                     removePreviousAssignment(ch, variable);
@@ -85,7 +84,7 @@ public class SolveWordPuzzle {
             }
         } else {
             // Success print path
-            System.out.println("Sucess path ");
+            System.out.println("Success path ");
             printPath(parent);
         }
     }
@@ -109,9 +108,9 @@ public class SolveWordPuzzle {
             int categoryIdx = indexToCategoryMap.get(variable).get(category);
 
             // Debug
-            System.out.println("Category " + category + " For index " + categoryIdx);
-            System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx) );
-            System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet() );
+            //System.out.println("Category " + category + " For index " + categoryIdx);
+            //System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx) );
+            //System.out.println( defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet() );
 
             // Add the set of characters at category index to intersect set
             if (!intersectValue.isEmpty()) {
@@ -137,7 +136,7 @@ public class SolveWordPuzzle {
             , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
 
         // Debug
-        System.out.println("updation progress " + defaultCategoryToLetterWordMap);
+        //System.out.println("updation progress " + defaultCategoryToLetterWordMap);
 
         // Get the set of categories belong to this variable (index)
         Set<String> categories = indexToCategoryMap.get(variable).keySet();
@@ -162,8 +161,8 @@ public class SolveWordPuzzle {
                 // Put only word list w.r.t word in a map
                 populateCategoryToLetterWordMap(charToWordList,category,defaultCategoryToLetterWordMapClone);
             }
-            System.out.println("Updated map for category " + category + " for index " + categoryIdx);
-            System.out.println(defaultCategoryToLetterWordMapClone.get(category));
+            //System.out.println("Updated map for category " + category + " for index " + categoryIdx);
+            //System.out.println(defaultCategoryToLetterWordMapClone.get(category));
         }
 
         return defaultCategoryToLetterWordMapClone;
@@ -183,20 +182,20 @@ public class SolveWordPuzzle {
         // Get the set of categories belong to this variable (index)
         Set<String> categories = indexToCategoryMap.get(variable).keySet();
         for (String category : categories) {
-            System.out.println("Before consistency check for category " + category);
+            //System.out.println("Before consistency check for category " + category);
             // Check if category exist in categoryToWordMap
             if (categoryToCharMap.containsKey(category)) {
                 categoryToCharMap.get(category).add(ch);
-                System.out.println(" Current allocation "
+                /*System.out.println("Current allocation "
                         + categoryToCharMap.get(category)
-                        + " for category " + category);
+                        + " for category " + category);*/
                 // Check if category is filled with all character
                 if (categoryToCharMap.get(category).size() == WordPuzzleConstant.WORD_LEN) {
                     StringBuilder word = new StringBuilder();
                     word.append(categoryToCharMap.get(category).get(0));
                     word.append(categoryToCharMap.get(category).get(1));
                     word.append(categoryToCharMap.get(category).get(2));
-                    System.out.println("isConsistent word " + word.toString() + " for category " + category);
+                    //System.out.println("isConsistent word " + word.toString() + " for category " + category);
                     // Check if word is valid
                     if (!categoryToWordsMap.get(category).contains(word.toString())) {
                         categoryToCharMap.get(category).remove(ch);
@@ -328,9 +327,15 @@ public class SolveWordPuzzle {
      * @param node
      */
     private void printPath(Node node) {
+        StringBuilder path = new StringBuilder();
+        StringBuilder word = new StringBuilder();
         while (node != null) {
-            System.out.println(node);
+            //System.out.println(node);
+            path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
+            word.insert(0,node.getValue());
             node = node.getParent();
         }
+        path.insert(0, "root");
+        System.out.println(path.toString() + " (found result: " + word.toString() + ")");
     }
 }

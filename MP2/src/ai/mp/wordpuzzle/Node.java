@@ -14,6 +14,7 @@ public class Node {
 
     private final String value;
     private Node parent;
+    private String category;
 
     Node(String value) {
         this.value = value;
@@ -21,7 +22,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return "Node [value=" + value + "]";
+        return "[" + value + "]";
     }
 
     @Override
@@ -59,6 +60,14 @@ public class Node {
 
     public String getValue() {
         return value;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
 }

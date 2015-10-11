@@ -53,6 +53,8 @@ public class Preprocessing {
 
     private Map<String, Set<String>> categoryToWordsMap = new HashMap<String, Set<String>>();
 
+    private Map<String, List<Integer>> categoryToIndexPositionMap = new HashMap<String, List<Integer>>();
+
     private int outputArraySize;
 
     public final String puzzleFilename;
@@ -95,12 +97,15 @@ public class Preprocessing {
      */
     private void populateIndexToCategoryMap(String line) {
         Map<String,Integer> categoryToCharIndexPos;
+        List<Integer> indexPosition = new ArrayList<Integer>();
         String [] lineSubpart = line.split(WordPuzzleConstant.COLON);
         String categoryName = lineSubpart[0];
         String [] position = lineSubpart[1].split(WordPuzzleConstant.COMMA);
         int charIndex = 0;
         while (charIndex < position.length) {
             int inputIdx = Integer.parseInt((position[charIndex]).trim());
+            // Keep track of index position for each category
+            indexPosition.add(inputIdx);
             // Present
             if (IndexToCategoryMap.containsKey(inputIdx)) {
                 IndexToCategoryMap.get(inputIdx).put(categoryName, charIndex);
@@ -112,6 +117,8 @@ public class Preprocessing {
             }
             charIndex += 1;
         }
+        // Put into categoryToIndexMap
+        categoryToIndexPositionMap.put(categoryName, indexPosition);
     }
 
     /**
@@ -196,5 +203,9 @@ public class Preprocessing {
 
     public Map<String, Set<String>> getCategoryToWordsMap() {
         return categoryToWordsMap;
+    }
+
+    public Map<String, List<Integer>> getCategoryToIndexPositionMap() {
+        return categoryToIndexPositionMap;
     }
 }

@@ -39,13 +39,18 @@ public class WordPuzzle {
         System.out.println(preprocess.getCategoryToLetterWordMap());
         System.out.println("==========================================");
 
-        // Solve the word puzzle
-        SolveWordPuzzle solve = new SolveWordPuzzle(preprocess.getCategoryToLetterWordMap()
+        // Solve the word puzzle by Letter based assignment
+        SolveWordPuzzleByLetterAssignment solveByLetter = new SolveWordPuzzleByLetterAssignment(preprocess.getCategoryToLetterWordMap()
                 , preprocess.getOutputArraySize()
                 , preprocess.getCategoryToWordsMap());
+        //solveByLetter.solveByLetterBasedAssignment();
 
-        // Solve by Letter based assignment
-        solve.solveByLetterBasedAssignment();
+        // Solve the word puzzle by Word based assignment
+        SolveWordPuzzleByWordAssignment solveByWord = new SolveWordPuzzleByWordAssignment(preprocess.getCategoryToLetterWordMap()
+                , preprocess.getOutputArraySize()
+                , preprocess.getCategoryToWordsMap()
+                , preprocess.getCategoryToIndexPositionMap());
+        solveByWord.solveByWordBasedAssignment();
     }
 
     /**

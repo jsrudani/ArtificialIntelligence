@@ -26,24 +26,25 @@ public class WordPuzzle {
         // Pre process puzzle file
         preprocess.prepareIndexToCategoryMap();
 
-        System.out.println("==========================================");
+        /*System.out.println("==========================================");
         System.out.println("After preparing Index Map ");
         System.out.println(Preprocessing.getIndexToCategoryMap());
-        System.out.println("==========================================");
+        System.out.println("==========================================");*/
 
         // Pre process word list
         preprocess.prepareCategoryToLetterWordMap();
 
-        System.out.println("==========================================");
+        /*System.out.println("==========================================");
         System.out.println("After preparing Category Map ");
         System.out.println(preprocess.getCategoryToLetterWordMap());
-        System.out.println("==========================================");
+        System.out.println("==========================================");*/
 
         // Solve the word puzzle by Letter based assignment
         SolveWordPuzzleByLetterAssignment solveByLetter = new SolveWordPuzzleByLetterAssignment(preprocess.getCategoryToLetterWordMap()
                 , preprocess.getOutputArraySize()
-                , preprocess.getCategoryToWordsMap());
-        //solveByLetter.solveByLetterBasedAssignment();
+                , preprocess.getCategoryToWordsMap()
+                , preprocess.getCategoryToIndexPositionMap());
+        solveByLetter.solveByLetterBasedAssignment();
 
         // Solve the word puzzle by Word based assignment
         SolveWordPuzzleByWordAssignment solveByWord = new SolveWordPuzzleByWordAssignment(preprocess.getCategoryToLetterWordMap()

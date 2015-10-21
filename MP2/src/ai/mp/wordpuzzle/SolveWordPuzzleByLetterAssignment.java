@@ -1,6 +1,8 @@
 package ai.mp.wordpuzzle;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,15 +23,18 @@ public class SolveWordPuzzleByLetterAssignment {
     private static Map<Integer,Map<String,Integer>> indexToCategoryMap = Preprocessing.getIndexToCategoryMap();
     private Map<String, Map<Integer, Map<Character, List<String> > > > defaultCategoryToLetterWordMap;
     private Map<String, Set<String>> categoryToWordsMap;
+    private Map<String, List<Integer>> categoryToIndexPositionMap;
     private int outputArraySize;
-    private Map<String, List<Character>> categoryToCharMap = new HashMap<String, List<Character>>();
+    private Map<String, Character[]> categoryToCharMap = new HashMap<String, Character[]>();
 
     SolveWordPuzzleByLetterAssignment(Map<String, Map<Integer, Map<Character, List<String> > > > categoryToLetterWordMap
             , final int outputArraySize
-            , Map<String, Set<String>> categoryToWordsMap) {
+            , Map<String, Set<String>> categoryToWordsMap
+            , Map<String, List<Integer>> categoryToIndexPositionMap) {
         this.defaultCategoryToLetterWordMap = categoryToLetterWordMap;
         this.outputArraySize = outputArraySize;
         this.categoryToWordsMap = categoryToWordsMap;
+        this.categoryToIndexPositionMap = categoryToIndexPositionMap;
     }
 
     /**
@@ -37,24 +42,25 @@ public class SolveWordPuzzleByLetterAssignment {
      */
     public void solveByLetterBasedAssignment() {
         // Get the order of Variable assignment (Most Constraint variable)
-        int [] orderedVariables = getMostConstraintVariables(indexToCategoryMap);
+        List<Integer> orderedVariables = getMostConstraintVariables(indexToCategoryMap);
         // Call recursively solve()
         solve(null,orderedVariables,0,defaultCategoryToLetterWordMap);
     }
 
-    private void solve(Node parent, int [] orderedVariables, int orderedVariableIdx
+    private void solve(Node parent, List<Integer> orderedVariables, int orderedVariableIdx
             , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
 
         // Check for base condition
-        if (orderedVariableIdx < orderedVariables.length) {
-            int variable = orderedVariables[orderedVariableIdx];
+        if (orderedVariableIdx < orderedVariables.size()) {
+            int variable = orderedVariables.get(orderedVariableIdx);
+            //int variable = orderedVariables[orderedVariableIdx];
             // Get the domain value for this variable
             Set<Character> domainValues = getDomainValue(variable, defaultCategoryToLetterWordMap);
 
             // Debug
-            //System.out.println("====================================");
-            //System.out.println("Variable " + variable);
-            //System.out.println("Domain values " + domainValues);
+            /*System.out.println("====================================");
+            System.out.println("Variable " + variable);
+            System.out.println("Domain values " + domainValues);*/
 
             // Check if there exist domain values
             if (domainValues.isEmpty()) {
@@ -70,6 +76,8 @@ public class SolveWordPuzzleByLetterAssignment {
                     //System.out.println("Assign " + ch + " for variable " + variable);
                     Node child = new Node(ch.toString());
                     child.setParent(parent);
+                    child.setVisited(false);
+                    child.setCharIndex(variable);
                     // consistency check
                     if (!isConsistent(ch, variable)) {
                         //System.out.println("Not consistent ");
@@ -84,7 +92,7 @@ public class SolveWordPuzzleByLetterAssignment {
             }
         } else {
             // Success print path
-            System.out.println("Success path ");
+            //System.out.println("Success path ");
             printPath(parent);
         }
     }
@@ -181,31 +189,39 @@ public class SolveWordPuzzleByLetterAssignment {
         boolean isRemove = false;
         // Get the set of categories belong to this variable (index)
         Set<String> categories = indexToCategoryMap.get(variable).keySet();
+
         for (String category : categories) {
             //System.out.println("Before consistency check for category " + category);
             // Check if category exist in categoryToWordMap
             if (categoryToCharMap.containsKey(category)) {
-                categoryToCharMap.get(category).add(ch);
+                categoryToCharMap.get(category)[ (variable - 1) ] = ch;
                 /*System.out.println("Current allocation "
-                        + categoryToCharMap.get(category)
+                        + Arrays.toString(categoryToCharMap.get(category))
                         + " for category " + category);*/
                 // Check if category is filled with all character
-                if (categoryToCharMap.get(category).size() == WordPuzzleConstant.WORD_LEN) {
-                    StringBuilder word = new StringBuilder();
-                    word.append(categoryToCharMap.get(category).get(0));
-                    word.append(categoryToCharMap.get(category).get(1));
-                    word.append(categoryToCharMap.get(category).get(2));
-                    //System.out.println("isConsistent word " + word.toString() + " for category " + category);
+                StringBuilder word = new StringBuilder();
+                for (int index : categoryToIndexPositionMap.get(category)) {
+                    if (categoryToCharMap.get(category)[(index - 1)] != ' ') {
+                        word.append( categoryToCharMap.get(category)[ (index - 1)] );
+                    } else {
+                        break;
+                    }
+                }
+                //System.out.println("Word formed for " + category + " : " + word.toString());
+                if (word.toString().length() == WordPuzzleConstant.WORD_LEN) {
                     // Check if word is valid
                     if (!categoryToWordsMap.get(category).contains(word.toString())) {
-                        categoryToCharMap.get(category).remove(ch);
+                        categoryToCharMap.get(category)[(variable - 1)] = ' ';
                         isRemove = true;
                         break;
                     }
                 }
             } else {
-                List<Character> charList = new ArrayList<Character>();
-                charList.add(ch);
+                Character [] charList = new Character[outputArraySize];
+                for (int i = 0;i < outputArraySize;i++) {
+                    charList[i] = ' ';
+                }
+                charList[(variable - 1)] = ch;
                 categoryToCharMap.put(category, charList);
             }
         }
@@ -213,7 +229,7 @@ public class SolveWordPuzzleByLetterAssignment {
             for (String category : categories) {
                 // Check if category exist in categoryToWordMap
                 if (categoryToCharMap.containsKey(category)) {
-                    categoryToCharMap.get(category).remove(ch);
+                    categoryToCharMap.get(category)[(variable - 1)] = ' ';
                 }
             }
             return false;
@@ -235,7 +251,7 @@ public class SolveWordPuzzleByLetterAssignment {
             // Check if category exist in categoryToWordMap
             if (categoryToCharMap.containsKey(category)) {
                 // remove the assignment
-                categoryToCharMap.get(category).remove(ch);
+                categoryToCharMap.get(category)[(variable - 1)] = ' ';
             }
         }
     }
@@ -313,12 +329,17 @@ public class SolveWordPuzzleByLetterAssignment {
      * 
      * @return most constraint variables
      */
-    private int [] getMostConstraintVariables(Map<Integer,Map<String,Integer>> indexToCategoryMap) {
-        int [] mcv = new int[outputArraySize];
-        for (int i = 1;i <= mcv.length; i++) {
-            mcv[i-1] = i;
-        }
-        return mcv;
+    private List<Integer> getMostConstraintVariables(final Map<Integer,Map<String,Integer>> indexToCategoryMap) {
+        List<Integer> index = new ArrayList<Integer>();
+        index.addAll(indexToCategoryMap.keySet());
+        Collections.sort(index, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer i1, Integer i2) {
+                return (indexToCategoryMap.get(i2).keySet().size() - indexToCategoryMap.get(i1).keySet().size());
+            }
+        });
+        System.out.println("Search order: " + index);
+        return index;
     }
 
     /**
@@ -328,14 +349,28 @@ public class SolveWordPuzzleByLetterAssignment {
      */
     private void printPath(Node node) {
         StringBuilder path = new StringBuilder();
+        String [] letter = new String[outputArraySize];
         StringBuilder word = new StringBuilder();
+        for (int i = 0; i < outputArraySize; i++) {
+            letter[i] = null;
+        }
         while (node != null) {
             //System.out.println(node);
-            path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
-            word.insert(0,node.getValue());
+            if (!node.isVisited()) {
+                path.insert(0, (WordPuzzleConstant.ARROW + node.getValue() + "(" + node.charIndex + ")"));
+                node.setVisited(true);
+            } else {
+                path.insert(0, (" "));
+            }
+            letter[(node.getCharIndex() - 1)] = node.getValue();
             node = node.getParent();
         }
-        path.insert(0, "root");
+        if (path.indexOf(" ") != 0) {
+            path.insert(0, "root");
+        }
+        for (String ch : letter) {
+            word.append(ch);
+        }
         System.out.println(path.toString() + " (found result: " + word.toString() + ")");
     }
 }

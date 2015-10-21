@@ -15,6 +15,8 @@ public class Node {
     private final String value;
     private Node parent;
     private String category;
+    public boolean isVisited;
+    public int charIndex;
 
     Node(String value) {
         this.value = value;
@@ -68,6 +70,22 @@ public class Node {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public boolean isVisited() {
+        return isVisited;
+    }
+
+    public void setVisited(boolean isVisited) {
+        this.isVisited = isVisited;
+    }
+
+    public int getCharIndex() {
+        return charIndex;
+    }
+
+    public void setCharIndex(int charIndex) {
+        this.charIndex = charIndex;
     }
 
 }

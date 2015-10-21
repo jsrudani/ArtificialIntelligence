@@ -1,8 +1,8 @@
 package ai.mp.wordpuzzle;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,19 +16,16 @@ import java.util.Set;
  */
 public class SolveWordPuzzleByWordAssignment {
 
-    private static Map<Integer,Map<String,Integer>> indexToCategoryMap = Preprocessing.getIndexToCategoryMap();
     private Map<String, Map<Integer, Map<Character, List<String> > > > defaultCategoryToLetterWordMap;
     private Map<String, List<Integer>> categoryToIndexPositionMap;
     private Map<String, Set<String>> categoryToWordsMap;
     private Character [] outputArray;
-    private int outputArraySize;
 
     SolveWordPuzzleByWordAssignment(Map<String, Map<Integer, Map<Character, List<String> > > > categoryToLetterWordMap
             , final int outputArraySize
             , Map<String, Set<String>> categoryToWordsMap
             , Map<String, List<Integer>> categoryToIndexPositionMap) {
         this.defaultCategoryToLetterWordMap = categoryToLetterWordMap;
-        this.outputArraySize = outputArraySize;
         this.categoryToWordsMap = categoryToWordsMap;
         this.categoryToIndexPositionMap = categoryToIndexPositionMap;
         this.outputArray = new Character[outputArraySize];
@@ -38,77 +35,79 @@ public class SolveWordPuzzleByWordAssignment {
      * It is used to solve word puzzle by word based assignment
      */
     public void solveByWordBasedAssignment() {
-        // Get the order of Variable assignment (Most Constraint variable)
-        int [] orderedVariables = getMostConstraintVariables(indexToCategoryMap);
+        // Get the order of the category
+        List<String> orderedCategory = getOrderedCategory();
         // Call recursively solve()
-        solve(null, orderedVariables, 0, defaultCategoryToLetterWordMap);
+        solve(null, 0, defaultCategoryToLetterWordMap, orderedCategory);
     }
 
-    private void solve(Node parent, int [] orderedVariables, int orderedVariableIdx
-            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
+    private void solve(Node parent, int orderedVariableIdx
+            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap
+            , List<String> orderedCategory) {
 
         Character filter = null;
+        int filterIdx = -1;
 
         // Check for base condition
-        if (orderedVariableIdx < orderedVariables.length) {
-            // Get the variable which needs to be assigned a value
-            int variable = orderedVariables[orderedVariableIdx];
+        if (orderedVariableIdx < orderedCategory.size()) {
+
+            // Get the category which needs to be assigned a value
+            String category = orderedCategory.get(orderedVariableIdx);
+            int charIndex = 0;
+
             // Check if there already exist character at variable position in output array
-            if (outputArray[(variable - 1)] != null) {
-                filter = outputArray[(variable - 1)];
-            } else {
-                filter = null;
+            for (int categoryIdx : categoryToIndexPositionMap.get(category)) {
+                if (outputArray[(categoryIdx - 1)] != null) {
+                    filter = outputArray[(categoryIdx - 1)];
+                    filterIdx = charIndex;
+                    break;
+                }
+                charIndex++;
             }
 
             // Debug
-            System.out.println("====================================");
-            System.out.println("Variable " + variable);
-            System.out.println("Filter " + filter);
+            /*System.out.println("====================================");
+            System.out.println("category " + category);
+            System.out.println("Filter char " + filter + " at index " + filterIdx);*/
 
-            // Get the domain value for given variable and filter
-            Set<Character> intersectValues = getDomainVariable(variable,defaultCategoryToLetterWordMap,filter);
+            // Get the domain value for given category and filter
+            Set<Node> intersectValues = getDomainVariable(category, filterIdx,defaultCategoryToLetterWordMap,filter);
 
-            System.out.println("Intersect values " + intersectValues);
+            //System.out.println("Intersect values " + intersectValues);
 
             // Check if there exist any domain value
             if (intersectValues.isEmpty()) {
                 // Backtrack print the path
-                System.out.println("Backtrack ");
-                //printPath(parent);
+                //System.out.println("Backtrack ");
+                printPath(parent, true, outputArray);
             } else {
-                // Get all the words
-                List<Node> values = getValues(variable,defaultCategoryToLetterWordMap,intersectValues);
-
-                System.out.println("List of values " + values);
-
-                // Update the default map according to domain value
-                Map<String,Map<Integer,Map<Character,List<String>>>> updatedCategoryToLetterWordMap = 
-                        updateCategoryToLetterWordMap(variable, intersectValues, defaultCategoryToLetterWordMap);
                 // For each value assign each word to respective index position
-                for (Node word : values) {
-                    System.out.println("Output array b4 assigning word " + word + " for variable " + variable
-                            + " is : \n" + Arrays.toString(outputArray));
+                for (Node word : intersectValues) {
+                    /*System.out.println("Output array b4 assigning word " + word + " for category " + category
+                            + " is : \n" + Arrays.toString(outputArray));*/
                     word.setParent(parent);
+                    // Add to visited set
+                    word.setVisited(false);
                     // Check for consistency
                     if (!isConsistentAndFillOutputArray(word)) {
-                        System.out.println("Not consistent ");
-                        //printPath(parent);
+                        //System.out.println("Not consistent ");
+                        printPath(word, true, outputArray);
                         continue;
                     }
                     // Fill the output array as per word as it is consistent
                     List<Integer> occupiedArrayPosition = fillOutPutArray(word);
-                    System.out.println("Output array till now " + Arrays.toString(outputArray));
-                    System.out.println("====================================");
+                    /*System.out.println("Output array till now " + Arrays.toString(outputArray));
+                    System.out.println("====================================");*/
                     // Recursively call to other index position
-                    solve(word, orderedVariables, (orderedVariableIdx + 1), updatedCategoryToLetterWordMap);
+                    solve(word, (orderedVariableIdx + 1), defaultCategoryToLetterWordMap, orderedCategory);
                     // Remove the previous assignment
                     removePreviousAssignedWord(word, occupiedArrayPosition);
                 }
             }
         } else {
             // Success path
-            System.out.println("Success path ");
-            printPath(parent);
+            //System.out.println("Success path ");
+            printPath(parent, false, outputArray);
         }
     }
 
@@ -203,8 +202,8 @@ public class SolveWordPuzzleByWordAssignment {
                     categoryWord.append(tempOutputArray[(index - 1)]);
                 }
             }
-            System.out.println("Word formed for category " + category
-                    + " is " + categoryWord.toString());
+            /*System.out.println("Word formed for category " + category
+                    + " is " + categoryWord.toString());*/
             if (categoryWord.toString().length() == WordPuzzleConstant.WORD_LEN) {
                 // Check if category contains such word
                 if (!categoryToWordsMap.get(category).contains(categoryWord.toString())) {
@@ -220,210 +219,66 @@ public class SolveWordPuzzleByWordAssignment {
      * exist character at given variable position. The filter helps to know whether there exist any values
      * for category. If no values then the previous assignment is wrong so backtrack.
      * 
+     * @param category
      * @param variable
      * @param defaultCategoryToLetterWordMap
      * @param filter
-     * @return Collection of intersect values
+     * @return
      */
-    private Set<Character> getDomainVariable(int variable
+    private Set<Node> getDomainVariable(String category, int variable
             , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap
             , Character filter) {
 
-        // Output set
-        Set<Character> intersectValue = new HashSet<Character>();
-        Set<Character> intermediateIntersectValue = new HashSet<Character>();
-
-        if (filter != null) {
-            intersectValue.add(filter);
-        }
-
-        // Get the set of categories belong to this variable (index)
-        Set<String> categories = indexToCategoryMap.get(variable).keySet();
-
-        // For each category get the corresponding index position and set of letter at that index position
-        for (String category : categories) {
-            int categoryIdx = indexToCategoryMap.get(variable).get(category);
-
-            //System.out.println("map for category " + category);
-            //System.out.println((defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet()));
-
-            // Add the set of characters at category index to intersect set
-            if (!intermediateIntersectValue.isEmpty()) {
-                intermediateIntersectValue.retainAll( (defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet()) );
-            } else {
-                intermediateIntersectValue.addAll( (defaultCategoryToLetterWordMap.get(category).get(categoryIdx).keySet()) );
-            }
-            //System.out.println("intersect after each category " + category);
-            //System.out.println(intermediateIntersectValue);
-        }
-
-        if (intersectValue.isEmpty()) {
-            return intermediateIntersectValue;
-        }
-        intersectValue.retainAll(intermediateIntersectValue);
-        // Return the domain values
-        return intersectValue;
-    }
-
-    /**
-     * It is used to get all the words which satisfy the domain constraint.
-     * 
-     * @param variable
-     * @param defaultCategoryToLetterWordMap
-     * @param intersectValue
-     * @return Collection of words that has intersect value at specified position
-     */
-    private List<Node> getValues(int variable
-            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap
-            , Set<Character> intersectValue) {
-
         // Output List of Node
-        List<Node> values = new ArrayList<Node>();
-        // Get the set of categories belong to this variable (index)
-        Set<String> categories = indexToCategoryMap.get(variable).keySet();
-
-        // For each intersect value and for each category get the all words that has intersect value
-        for (Character ch : intersectValue) {
-            for (String category : categories) {
-                int categoryIdx = indexToCategoryMap.get(variable).get(category);
-                // Get the words corresponding to intersect character at specified index
-                List<String> words = defaultCategoryToLetterWordMap.get(category).get(categoryIdx).get(ch);
-                // Prepare node for each words and output to node list
-                for (String word : words) {
-                    Node node = new Node(word);
-                    node.setCategory(category);
-                    values.add(node);
-                }
+        Set<Node> values = new HashSet<Node>();
+        List<String> words = new ArrayList<String>();
+        // If index is -1 then no matching, we need to consider all the words in that category
+        if (variable == -1) {
+            // Loop till the max length of word seen till now. But in our case we know it is 3
+            for (int i = 0;i < WordPuzzleConstant.WORD_LEN;i++) {
+                words.addAll(categoryToWordsMap.get(category));
             }
+        } else {
+            // Get the words corresponding to intersect character at specified index
+            words = defaultCategoryToLetterWordMap.get(category).get(variable).get(filter);
         }
-        // Return the domain values
+        // Check if there exist any words based on filter character
+        if (words == null || words.isEmpty()) {
+            return values;
+        }
+        // Prepare node for each words and output to node list
+        for (String word : words) {
+            Node node = new Node(word);
+            node.setCategory(category);
+            values.add(node);
+        }
         return values;
     }
 
     /**
-     * It is used to update the default CategoryToLetterWordMap w.r.t allowed character at given variable.
-     * 
-     * @param variable
-     * @param intersectValue
-     * @param defaultCategoryToLetterWordMap
-     * 
-     * @return updated map to be used by other variables
+     * It is used to return the order in which category is assigned a value
+     * @return List of ordered category
      */
-    private Map<String,Map<Integer,Map<Character,List<String>>>> updateCategoryToLetterWordMap(int variable
-            ,Set<Character> intersectValue
-            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
-
-        // Debug
-        //System.out.println("updation progress " + defaultCategoryToLetterWordMap);
-
-        // Get the set of categories belong to this variable (index)
-        Set<String> categories = indexToCategoryMap.get(variable).keySet();
-
-        // Clone the defaultCategoryToLetterWordMap
-        Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone
-                = cloneCategoryToLetterWordMap(defaultCategoryToLetterWordMap);
-
-        // For each category get the corresponding index position and set of letter at that index position
-        for (String category : categories) {
-            int categoryIdx = indexToCategoryMap.get(variable).get(category);
-            // Clear the old letter to word map
-            for(int i = 0; i < WordPuzzleConstant.WORD_LEN;i++) {
-                defaultCategoryToLetterWordMapClone.get(category).get(i).clear();
-            }
-            // For each intersect value update the corresponding category
-            for (Character ch : intersectValue) {
-                // Get the word list from default map
-                List<String> charToWordList
-                        = defaultCategoryToLetterWordMap.get(category).get(categoryIdx).get(ch);
-                //System.out.println("Old word list for char " + ch + " list " + charToWordList);
-                // Put only word list w.r.t word in a map
-                populateCategoryToLetterWordMap(charToWordList,category,defaultCategoryToLetterWordMapClone);
-            }
-            //System.out.println("Updated map for category " + category + " for index " + categoryIdx);
-            //System.out.println(defaultCategoryToLetterWordMapClone.get(category));
+    private List<String> getOrderedCategory() {
+        List<String> orderedCategory = new ArrayList<String>();
+        for (String category : categoryToIndexPositionMap.keySet()) {
+            orderedCategory.add(category);
         }
-        return defaultCategoryToLetterWordMapClone;
-    }
-
-    /**
-     * It used to clone the CategoryToLetterWordMap.
-     * 
-     * @param defaultCategoryToLetterWordMap
-     * @return
-     */
-    private Map<String,Map<Integer,Map<Character,List<String>>>> cloneCategoryToLetterWordMap(Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMap) {
-
-        // Clone each nested map and list
-        Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone
-                    = new HashMap<String,Map<Integer,Map<Character,List<String>>>>();
-        for (String category : defaultCategoryToLetterWordMap.keySet()) {
-            Map<Integer,Map<Character,List<String>>> tempIdxToCharacterMap
-                                = defaultCategoryToLetterWordMap.get(category);
-            Map<Integer,Map<Character,List<String>>> indexToCharacterMap =
-                    new HashMap<Integer,Map<Character,List<String>>>();
-            for (Integer index : tempIdxToCharacterMap.keySet()) {
-                Map<Character,List<String>> tempCharToWordList = tempIdxToCharacterMap.get(index);
-                Map<Character,List<String>> charToWordList = new HashMap<Character,List<String>>();
-                for (Character ch : tempCharToWordList.keySet()) {
-                    List<String> wordList = new ArrayList<String>();
-                    wordList.addAll(tempCharToWordList.get(ch));
-                    charToWordList.put(ch, wordList);
-                }
-                indexToCharacterMap.put(index, charToWordList);
+        // Sort the category set as per number of words in each category
+        Collections.sort(orderedCategory, new Comparator<String>() {
+            @Override
+            public int compare(String s1, String s2) {
+                return (categoryToWordsMap.get(s1).size() - categoryToWordsMap.get(s2).size());
             }
-            defaultCategoryToLetterWordMapClone.put(category, indexToCharacterMap);
+        });
+        StringBuilder categoryPath = new StringBuilder();
+        int i = 0;
+        for (i = (orderedCategory.size() - 1);i > 0;i--) {
+            categoryPath.insert( 0, (WordPuzzleConstant.ARROW + orderedCategory.get(i)));
         }
-        return defaultCategoryToLetterWordMapClone;
-    }
-
-    /**
-     * It is used to update the character to word list as per new domain value for each category.
-     * 
-     * @param charToWordList
-     * @param category
-     * @param defaultCategoryToLetterWordMapClone
-     */
-    private void populateCategoryToLetterWordMap(List<String> charToWordList, String category
-            , Map<String,Map<Integer,Map<Character,List<String>>>> defaultCategoryToLetterWordMapClone) {
-
-        Map<Integer, Map<Character,List<String> > > indexToLetterWordMap = defaultCategoryToLetterWordMapClone.get(category);
-
-        Map<Character,List<String>> letterToWordListMap = null;
-
-        for (String word : charToWordList) {
-            int charIdx = 0;
-            while (charIdx < word.length()) {
-                letterToWordListMap = indexToLetterWordMap.get(charIdx);
-                char c = word.charAt(charIdx);
-                if (letterToWordListMap.containsKey(c)) {
-                    letterToWordListMap.get(c).add(word);
-                } else {
-                    List<String> wordList = new ArrayList<String>();
-                    wordList.add(word);
-                    letterToWordListMap.put(c, wordList);
-                }
-                indexToLetterWordMap.put(charIdx, letterToWordListMap);
-                charIdx += 1;
-            }
-        }
-        defaultCategoryToLetterWordMapClone.put(category, indexToLetterWordMap);
-    }
-
-    /**
-     * This method is used to select most constraint variables. The variables here are the
-     * index position of final output array. By default we assign in ascending order of the
-     * index.
-     * 
-     * @param indexToCategoryMap
-     * 
-     * @return most constraint variables
-     */
-    private int [] getMostConstraintVariables(Map<Integer,Map<String,Integer>> indexToCategoryMap) {
-        int [] mcv = new int[outputArraySize];
-        for (int i = 1;i <= mcv.length; i++) {
-            mcv[i-1] = i;
-        }
-        return mcv;
+        categoryPath.insert(0, orderedCategory.get(i));
+        System.out.println("Search order: " + categoryPath.toString());
+        return orderedCategory;
     }
 
     /**
@@ -431,16 +286,31 @@ public class SolveWordPuzzleByWordAssignment {
      * 
      * @param node
      */
-    private void printPath(Node node) {
+    private void printPath(Node node, boolean backtrack, Character [] outputArray) {
         StringBuilder path = new StringBuilder();
         StringBuilder word = new StringBuilder();
         while (node != null) {
-            System.out.println(node);
-/*            path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
-            word.insert(0,node.getValue());*/
+            //System.out.println(node + node.getCategory());
+            if (!node.isVisited) {
+                path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
+                node.setVisited(true);
+            } else {
+                path.insert(0, ("\t  "));
+            }
+            //path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
             node = node.getParent();
         }
-/*        path.insert(0, "root");
-        System.out.println(path.toString() + " (found result: " + word.toString() + ")");*/
+        if (path.indexOf("\t") != 0) {
+            path.insert(0, "root");
+        }
+        if (backtrack) {
+            path.append((WordPuzzleConstant.ARROW + "backtrack"));
+            System.out.println(path.toString());
+        } else {
+            for (Character ch : outputArray) {
+                word.append(ch);
+            }
+            System.out.println(path.toString() + " (found result: " + word.toString() + ")");
+        }
     }
 }

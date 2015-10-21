@@ -1,0 +1,6 @@
+7
+job: 2, 4 ,6
+language: 1, 2, 5
+game: 1, 5, 7
+kitchen: 1, 4, 6
+noun: 3, 5, 6

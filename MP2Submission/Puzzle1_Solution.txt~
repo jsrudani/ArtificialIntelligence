@@ -1,0 +1,110 @@
+Letter Based Assignment
+=======================
+Search order: [9, 5, 3, 4, 7, 8, 1, 2, 6]
+root -> E -> A -> E -> S -> D -> Y -> N -> W -> Y (found result: NWESAYDYE)
+     					-> N -> Y (found result: NNESAYDYE)
+    		    -> M -> D -> Y -> N -> W -> N (found result: NWEMANDYE)
+				     	-> N -> N (found result: NNEMANDYE)
+Word Based Assignment
+=====================
+Search order: emotion -> body -> adverb -> adjective -> interjection -> verb
+root -> WOE	     -> TOE -> backtrack
+	   	     -> RIB -> backtrack
+	   	     -> LEG -> backtrack
+	   	     -> JAW -> backtrack
+	   	     -> LIP -> backtrack
+	    	     -> EAR -> backtrack
+	   	     -> HIP -> backtrack
+	   	     -> ARM -> backtrack
+	   	     -> EYE -> backtrack
+root -> JOY	     -> TOE -> backtrack
+	   	     -> RIB -> backtrack
+	   	     -> LEG -> backtrack
+	   	     -> JAW -> backtrack
+	   	     -> LIP -> backtrack
+	   	     -> EAR -> backtrack
+	   	     -> HIP -> backtrack
+	   	     -> ARM -> backtrack
+	   	     -> EYE -> backtrack
+root -> AWE	     -> TOE -> backtrack
+	   	     -> RIB -> backtrack
+	   	     -> LEG -> backtrack
+	   	     -> JAW -> backtrack
+	   	     -> LIP -> backtrack
+	   	     -> EAR -> backtrack
+	   	     -> HIP -> backtrack
+	   	     -> ARM -> backtrack
+	   	     -> EYE -> backtrack
+root -> SAD	     -> TOE -> backtrack
+	   	     -> RIB -> backtrack
+	   	     -> LEG -> backtrack
+	   	     -> JAW -> backtrack
+	   	     -> LIP 	  -> NAW -> backtrack
+	  	   		  -> NAE -> backtrack
+	  	   		  -> NAH -> backtrack
+	   	     -> EAR -> backtrack
+	   	     -> HIP 	  -> NAW -> backtrack
+	  	   	      	  -> NAE -> backtrack
+	  	   		  -> NAH -> backtrack
+	   	     -> ARM -> backtrack
+	   	     -> EYE	  -> NAW -> backtrack
+	  	   		  -> NAE -> FEW -> backtrack
+	  	  	   		 -> RED -> backtrack
+	  	  	   		 -> DEF -> backtrack
+	  	  	   		 -> WEE -> SUP -> backtrack
+	  	  	  	   		-> SAY -> DRY -> backtrack
+	  	  	  	  	   	       -> DIP -> backtrack
+	  	  	  	  	   	       -> DIG -> backtrack
+	  	  	  	  	   	       -> DIE -> backtrack
+	  	  	  	  	   	       -> DAM -> backtrack
+	  	  	  	  	   	       -> DYE (found result: NWESAYDYE)
+	  	  	  	   		-> SHH -> backtrack
+					 -> NEE -> SUP -> backtrack
+					 -> SAY -> DRY -> backtrack
+	  	  	  	  	   	       -> DIP -> backtrack
+	  	  	  	  	   	       -> DIG -> backtrack
+	  	  	  	  	   	       -> DIE -> backtrack
+	  	  	  	  	   	       -> DAM -> backtrack
+	  	  	  	  	   	       -> DYE (found result: NNESAYDYE)
+	  	  	  	   	 -> SHH -> backtrack
+	  	   		  -> NAH -> backtrack
+root -> MAD	-> TOE -> backtrack
+	   	-> RIB -> backtrack
+	   	-> LEG -> backtrack
+	   	-> JAW -> backtrack
+	   	-> LIP -> NAW -> backtrack
+	  	       -> NAE -> backtrack
+	  	       -> NAH -> backtrack
+	   	-> EAR -> backtrack
+	   	-> HIP -> NAW -> backtrack
+	  	       -> NAE -> backtrack
+	  	       -> NAH -> backtrack
+	   	-> ARM -> backtrack
+	   	-> EYE -> NAW -> backtrack
+	  	       -> NAE -> FEW -> backtrack
+	  	  	      -> RED -> backtrack
+	  	  	      -> DEF -> backtrack
+	  	  	      -> WEE -> MEH -> backtrack
+	  	  	  	     -> MAN -> DRY -> backtrack
+	  	  	  	  	    -> DIP -> backtrack
+	  	  	  	  	    -> DIG -> backtrack
+	  	  	  	  	    -> DIE -> backtrack
+	  	  	  	  	    -> DAM -> backtrack
+	  	  	  	  	    -> DYE (found result: NWEMANDYE)
+	  	  	      -> NEE -> MEH -> backtrack
+	  	  	  	     -> MAN -> DRY -> backtrack
+	  	  	  	  	    -> DIP -> backtrack
+	  	  	  	  	    -> DIG -> backtrack
+	  	  	  	  	    -> DIE -> backtrack
+	  	  	  	  	    -> DAM -> backtrack
+	  	  	  	  	    -> DYE (found result: NNEMANDYE)
+	  	        -> NAH(adverb) -> backtrack
+root -> CRY -> TOE -> backtrack
+	    -> RIB -> backtrack
+	    -> LEG -> backtrack
+	    -> JAW -> backtrack
+	    -> LIP -> backtrack
+	    -> EAR -> backtrack
+	    -> HIP -> backtrack
+	    -> ARM -> backtrack
+	    -> EYE -> backtrack

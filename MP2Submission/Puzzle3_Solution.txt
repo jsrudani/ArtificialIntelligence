@@ -1,0 +1,68 @@
+Letter Based Assignment
+=======================
+Search order: [5, 1, 2, 4, 6, 7, 3]
+root -> P(5) -> A(1) -> S(2) -> L(4) -> E(6) -> A(7) -> U(3) (found result: ASULPEA)
+     				     -> I(6) -> E(7) -> U(3) (found result: ASULPIE)
+
+Word Based Assignment
+=====================
+Search order: nature -> food -> animal -> interjection -> noun
+root -> GAT -> TEA -> backtrack
+root -> MEW -> backtrack
+root -> PED -> DIP -> backtrack
+root -> BOT -> TEA -> backtrack
+root -> DAL -> LOX -> backtrack
+root -> ALP -> PEA -> APE -> backtrack
+	  	   -> ASP -> SUP -> LID -> backtrack
+	  	  	  	 -> LIE -> backtrack
+	  	  	  	 -> LEG -> backtrack
+				 -> LIP -> backtrack
+				 -> LOT -> backtrack
+				 -> LEA (found result: ASULPEA)
+				 -> LOG -> backtrack
+				 -> LAP -> backtrack
+				 -> LAB -> backtrack
+				 -> LAD -> backtrack
+	  	  	   -> SAY -> backtrack
+	  	  	   -> SHH -> backtrack
+	  	    -> ANT -> backtrack
+	     -> PIE -> APE -> backtrack
+	  	    -> ASP -> SUP -> LID -> backtrack
+	  	  	  	  -> LIE (found result: ASULPIE)
+				  -> LEG -> backtrack
+				  -> LIP -> backtrack
+				  -> LOT -> backtrack
+				  -> LEA -> backtrack
+				  -> LOG -> backtrack
+				  -> LAP -> backtrack
+				  -> LAB -> backtrack
+				  -> LAD -> backtrack
+	  	  	   -> SAY -> backtrack
+	  	  	   -> SHH -> backtrack
+	  	    -> ANT -> backtrack
+root -> EFT -> TEA -> backtrack
+root -> IFE -> EGG -> backtrack
+root -> TED -> DIP -> backtrack
+root -> YAY -> YAM -> backtrack
+root -> JUG -> backtrack
+root -> ROC -> CEP -> backtrack
+	    -> COB -> backtrack
+	    -> COD -> backtrack
+root -> VUG -> backtrack
+root -> TOW -> backtrack
+root -> RIA -> backtrack
+root -> ZHO -> OAT -> ZHO -> HUM -> backtrack
+			  -> HEM -> backtrack
+			  -> HUH -> backtrack
+			  -> HEY -> backtrack
+			  -> HMM -> backtrack
+			  -> HAW -> backtrack
+			  -> HOW -> backtrack
+			  -> HAH -> backtrack
+	    -> OIL -> backtrack
+root -> KED -> DIP -> backtrack
+root -> NEB -> BOK -> backtrack
+	    -> BUN -> backtrack
+root -> PUY -> YAM -> backtrack
+root -> DAW -> backtrack
+root -> IVI -> backtrack

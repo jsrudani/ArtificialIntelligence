@@ -1,0 +1,71 @@
+Letter Based Assignment
+=======================
+Search order: [9, 8, 6, 3, 4, 7, 1, 2, 5]
+ -> N(9) -> E(8) -> O(6) -> T(3) -> T(4) -> I(7) -> T(1) -> H(2) -> N(5) (found result: THTTNOIEN)
+         							 -> Y(5) (found result: THTTYOIEN)
+       						 -> I(1) -> H(2) -> N(5) (found result: IHTTNOIEN)
+         							 -> Y(5) (found result: IHTTYOIEN)
+
+Word Based Assignment
+=====================
+Search order: number -> container -> music -> body -> adverb -> animal -> noun
+root -> TEN -> CAN -> backtrack
+	    -> BIN -> TIE -> backtrack
+	    -> TIN -> TIE -> TOE -> NOT -> backtrack
+	  	  	  	 -> YON -> EEL -> backtrack
+			  	  	-> TEG -> backtrack
+			  	  	-> BEE -> backtrack
+			  	  	-> HEN -> NOD -> backtrack
+				  	       -> JOY -> backtrack
+				  	       -> TOE -> backtrack
+				  	       -> NOB -> backtrack
+				  	       -> GOD -> backtrack
+				  	       -> BOY -> backtrack
+				  	       -> COT -> backtrack
+				  	       -> GOB -> backtrack
+				  	       -> ZOO -> backtrack
+				  	       -> FOG -> backtrack
+				  	       -> COW -> backtrack
+				  	       -> SOD -> backtrack
+				  	       -> LOG -> backtrack
+				  	       -> DOG -> backtrack
+				  	       -> HOP -> backtrack
+				  	       -> POT -> backtrack
+				  	       -> ION (found result: IHTTYOIEN)
+				  	       -> SOY -> backtrack
+				  	       -> TON (found result: THTTYOIEN)
+				  	       -> LOT -> backtrack
+				  	       -> TOP -> backtrack
+				  	       -> POD -> backtrack
+				  	       -> DOT -> backtrack
+				  	       -> HOD -> backtrack
+	  	  	  	-> NON -> EEL  -> backtrack
+				       -> TEG  -> backtrack
+				       -> BEE  -> backtrack
+				       -> HEN  -> NOD -> backtrack
+				  	       -> JOY -> backtrack
+				  	       -> TOE -> backtrack
+				  	       -> NOB -> backtrack
+				  	       -> GOD -> backtrack
+				  	       -> BOY -> backtrack
+				  	       -> COT -> backtrack
+				  	       -> GOB -> backtrack
+				  	       -> ZOO -> backtrack
+				  	       -> FOG -> backtrack
+				  	       -> COW -> backtrack
+				  	       -> SOD -> backtrack
+				  	       -> LOG -> backtrack
+				  	       -> DOG -> backtrack
+				  	       -> HOP -> backtrack
+				  	       -> POT -> backtrack
+				  	       -> ION (found result: IHTTNOIEN)
+				  	       -> SOY -> backtrack
+				  	       -> TON (found result: THTTNOIEN)
+				  	       -> LOT -> backtrack
+				  	       -> TOP -> backtrack
+				  	       -> POD -> backtrack
+				  	       -> DOT -> backtrack
+				  	       -> HOD -> backtrack
+root -> ONE -> backtrack
+root -> TWO -> backtrack
+root -> SIX -> BOX -> backtrack

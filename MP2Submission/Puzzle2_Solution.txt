@@ -1,0 +1,76 @@
+Letter Based Assignment
+=======================
+Search order: [2, 4, 1, 5, 6, 9, 3, 7, 8]
+root -> S(2) -> A(4) -> H(1) -> I(5) -> W(6) -> S(9) -> I(3) -> N(7) -> P(8) (found result: HSIAIWNPS)
+         							     -> C(8) (found result: HSIAIWNCS)
+  	     -> O(4) -> H(1) -> I(5) -> W(6) -> S(9) -> I(3) -> N(7) -> D(8) (found result: HSIOIWNDS)
+         							     -> Y(8) (found result: HSIOIWNYS)
+Word Based Assignment
+=====================
+Search order: pronoun -> palindrome -> math -> interjection -> verb -> noun
+root -> FEW -> WOW -> backtrack
+root -> SHE -> EVE -> backtrack
+	    -> EWE -> backtrack
+	    -> EYE -> backtrack
+root -> ANY -> backtrack
+root -> ITS -> SIS -> SEC -> backtrack
+	  	   -> SET -> backtrack
+	  	   -> SIN -> ICK -> backtrack
+	  	   -> SUM -> backtrack
+root -> ONE -> EVE -> backtrack
+	    -> EWE -> backtrack
+	    -> EYE -> backtrack
+root -> HIS -> SIS -> SEC -> backtrack
+	  	   -> SET -> backtrack
+	  	   -> SIN -> HUM -> backtrack
+	  	  	  -> HEM -> backtrack
+	  	  	  -> HUH -> backtrack
+	  	  	  -> HEY -> backtrack
+	  	  	  -> HMM -> backtrack
+	  	  	  -> HAW -> SIP -> backtrack
+				 -> SET -> backtrack
+				 -> SIT -> backtrack
+				 -> SOW -> backtrack
+				 -> SKI -> backtrack
+				 -> SEW -> backtrack
+				 -> SAY -> backtrack
+				 -> SOB -> backtrack
+	  	  	  	 -> SAW -> SIP -> backtrack
+				        -> SIR -> backtrack
+					-> SET -> backtrack
+					-> SAP (found result: HSIAIWNPS)
+					-> SOY -> backtrack
+					-> SAC (found result: HSIAIWNCS)
+					-> SOD -> backtrack
+					-> SUN -> backtrack
+					-> SIN -> backtrack
+					-> SUM -> backtrack
+ 					-> SEA -> backtrack
+	  	  	  	 -> SIN -> backtrack
+	  	  	  -> HOW -> SIP -> backtrack
+	  	  	  	 -> SET -> backtrack
+	  	  	  	 -> SIT -> backtrack
+	  	  	  	 -> SOW -> SIP -> backtrack
+					-> SIR -> backtrack
+					-> SET -> backtrack
+					-> SAP -> backtrack
+					-> SOY (found result: HSIOIWNYS)
+					-> SAC -> backtrack
+					-> SOD (found result: HSIOIWNDS)
+					-> SUN -> backtrack
+					-> SIN -> backtrack
+					-> SUM -> backtrack
+					-> SEA -> backtrack
+				 -> SKI -> backtrack
+				 -> SEW -> backtrack
+				 -> SAY -> backtrack
+				 -> SOB -> backtrack
+				 -> SAW -> backtrack
+				 -> SIN -> backtrack
+	  	  	  -> HAH -> backtrack
+	  	    -> SUM -> backtrack
+root -> YOU -> backtrack
+root -> OUR -> backtrack
+root -> HER -> backtrack
+root -> WHO -> backtrack
+root -> HIM -> MOM -> backtrack

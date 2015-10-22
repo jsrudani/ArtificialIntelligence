@@ -1,0 +1,57 @@
+Letter Based Assignment
+=======================
+Search order: [1, 2, 4, 8, 6, 7, 3, 5]
+root -> H(1) -> E(2) -> I(4) -> E(8) -> Y(6) -> R(7) -> D(3) -> T(5) (found result: HEDITYRE)
+       						     -> T(3) -> T(5) (found result: HETITYRE)
+       						     -> L(3) -> T(5) (found result: HELITYRE)
+
+Word Based Assignment
+=====================
+Search order: body -> pronoun -> computer -> interjection -> verb -> noun
+root -> TOE -> ITS(pronoun) -> backtrack
+root -> RIB -> backtrack
+root -> LEG -> backtrack
+root -> JAW -> backtrack
+root -> LIP -> backtrack
+root -> EAR -> FEW -> backtrack
+	    -> HER -> backtrack
+root -> HIP -> SHE -> backtrack
+	    -> WHO -> backtrack
+root -> ARM -> backtrack
+root -> EYE -> FEW -> backtrack
+	    -> HER -> HIT -> HUM -> backtrack
+			  -> HEM -> backtrack
+			  -> HUH -> backtrack
+			  -> HEY -> SIP -> backtrack
+			  	 -> FIT -> backtrack
+			  	 -> AIL -> backtrack
+			  	 -> DIP -> backtrack
+			  	 -> BID -> backtrack
+			  	 -> SIT -> backtrack
+			  	 -> DIG -> backtrack
+			  	 -> WIN -> backtrack
+			  	 -> SIN -> backtrack
+			  	 -> TIP -> backtrack
+			  	 -> ZIP -> backtrack
+			  	 -> LIE -> IMP -> backtrack
+			  	  	-> IRE (found result: HELITYRE)
+			  	  	-> ICE -> backtrack
+			  	  	-> IVY -> backtrack
+			  	  	-> ION -> backtrack
+			  	 -> HIT -> backtrack
+			  	 -> DIE -> IMP -> backtrack
+			  	  	-> IRE (found result: HEDITYRE)
+			  	  	-> ICE -> backtrack
+			  	  	-> IVY -> backtrack
+			  	  	-> ION -> backtrack
+			  	 -> MIX -> backtrack
+			  	 -> TIE -> IMP -> backtrack
+			  	  	-> IRE (found result: HETITYRE)
+			  	  	-> ICE -> backtrack
+			  	  	-> IVY -> backtrack
+			  	  	-> ION -> backtrack
+			  	  -> OIL -> backtrack
+			   -> HMM -> backtrack
+			   -> HAW -> backtrack
+			   -> HOW -> backtrack
+			   -> HAH -> backtrack

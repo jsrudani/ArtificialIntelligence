@@ -1,7 +1,9 @@
 package ai.mp.MapColoring;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class is used to represent region in a given plane. It includes following
@@ -21,12 +23,21 @@ public class Region {
     private final int x;
     private final int y;
     private List<Region> neighbors;
-    private int assignedColor;
+    private ColorInfo assignedColor;
+    private Set<ColorInfo> domains;
 
     Region(int x, int y) {
         this.x = x;
         this.y = y;
         neighbors = new ArrayList<Region>();
+        domains = new HashSet<ColorInfo>();
+        initializeDefaultDomain();
+    }
+
+    private void initializeDefaultDomain() {
+        for (COLOR color : COLOR.values()) {
+            domains.add(new ColorInfo(color));
+        }
     }
 
     @Override
@@ -68,11 +79,11 @@ public class Region {
         this.neighbors = neighbors;
     }
 
-    public int getAssignedColor() {
+    public ColorInfo getAssignedColor() {
         return assignedColor;
     }
 
-    public void setAssignedColor(int assignedColor) {
+    public void setAssignedColor(ColorInfo assignedColor) {
         this.assignedColor = assignedColor;
     }
 
@@ -94,5 +105,9 @@ public class Region {
 
     public boolean checkIfNeighborExist(Region region) {
         return this.neighbors.contains(region);
+    }
+
+    public Set<ColorInfo> getDomains() {
+        return domains;
     }
 }

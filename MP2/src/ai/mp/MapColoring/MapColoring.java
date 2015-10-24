@@ -22,6 +22,7 @@ public class MapColoring {
      */
     private Set<Segment> segmentSet = new HashSet<Segment>();
 
+    @SuppressWarnings("resource")
     public static void main(String[] args) {
 
         // Instantiate the Map Coloring instance
@@ -33,11 +34,11 @@ public class MapColoring {
         System.out.println("Number of vertices " + numberOfVertices);
 
         // Create the random region (point)
-        //Set<Region> region = mapColor.generateRandomRegion(numberOfVertices);
-        //System.out.println(region);
+        Set<Region> region = mapColor.generateRandomRegion(numberOfVertices);
+        System.out.println(region);
 
         // Temp set of regions. It will be removed after entire problem solved
-        Set<Region> region = new HashSet<Region>();
+        /*Set<Region> region = new HashSet<Region>();
         Region reg = new Region(3,0);
         region.add(reg);
         reg = new Region(1,1);
@@ -46,13 +47,17 @@ public class MapColoring {
         region.add(reg);
         reg = new Region(1,3);
         region.add(reg);
-        System.out.println(region);
+        System.out.println(region);*/
 
         // Generate Map with N connected points
         mapColor.createMapWithRegion(region);
         System.out.println(mapColor.segmentSet);
 
-        // Color the Map
+        // Color the Map without forward check
+        ColorMapWithoutForwardCheck colorMap = new ColorMapWithoutForwardCheck(region
+                ,mapColor.segmentSet);
+        colorMap.solveWithoutFrwdCheck();
+
     }
 
     /**
@@ -184,6 +189,26 @@ public class MapColoring {
                 || mNumneratorB < 0.0 || mNumneratorB > 1.0) {
             return false;
         }
-        return true;
+        // Check if there exist any common point between two segment
+        return checkForCommonPoint(newSegment, oldSegment) ? false : true;
     }
+
+    /**
+     * It is used to check whether there exist any common point between given two segment.
+     * It means there are two line segment drawn from one point
+     * 
+     * @param newSegment
+     * @param oldSegment
+     * @return boolean
+     */
+    private boolean checkForCommonPoint(Segment newSegment, Segment oldSegment) {
+        if ( (newSegment.getFromRegion() == oldSegment.getFromRegion()
+                || newSegment.getFromRegion() == oldSegment.getToRegion()
+           ) || (newSegment.getToRegion() == oldSegment.getFromRegion()
+                  || newSegment.getToRegion() == oldSegment.getToRegion()) ) {
+            return true;
+        }
+        return false;
+    }
+
 }

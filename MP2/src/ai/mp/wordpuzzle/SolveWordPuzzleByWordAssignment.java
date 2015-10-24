@@ -292,7 +292,7 @@ public class SolveWordPuzzleByWordAssignment {
         while (node != null) {
             //System.out.println(node + node.getCategory());
             if (!node.isVisited) {
-                path.insert(0, (WordPuzzleConstant.ARROW + node.getValue()));
+                path.insert(0, (WordPuzzleConstant.ARROW + node.getValue() + "(" + node.getCategory() + ")"));
                 node.setVisited(true);
             } else {
                 path.insert(0, ("\t  "));

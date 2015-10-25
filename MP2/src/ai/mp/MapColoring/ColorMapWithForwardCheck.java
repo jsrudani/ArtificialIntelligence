@@ -38,20 +38,21 @@ public class ColorMapWithForwardCheck {
 
         // Get the order of Variable assignment (Most Constraint variable)
         List<Region> orderedRegions = getMostConstraintVariables(region);
-        for (Region reg : orderedRegions) {
+        /*for (Region reg : orderedRegions) {
             System.out.println(reg);
             System.out.println(reg.getDomains());
-        }
+        }*/
         // Record the start time
         startTime = System.currentTimeMillis();
-        System.out.println("Start time: " + startTime);
+        //System.out.println("Start time: " + startTime);
 
         // Call recursively solve()
         solve(orderedRegions,0);
 
         // Record the end time
         endTime = System.currentTimeMillis();
-        System.out.println("End time: " + endTime);
+        //System.out.println("End time: " + endTime);
+
         // Print all the statistics
         System.out.println("N: " + region.size());
         System.out.println("Number of constraint: " + segmentSet.size());

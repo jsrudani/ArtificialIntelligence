@@ -49,6 +49,10 @@ public class ColorMapWithoutForwardCheck {
         // Record the end time
         endTime = System.currentTimeMillis();
         //System.out.println("End time: " + endTime);
+        // Print all the statistics
+        System.out.println("N: " + region.size());
+        System.out.println("Number of constraint: " + segmentSet.size());
+        System.out.println("Number of variable assignment: " + variableAssignment);
         System.out.println("Running time in ms: " + (endTime - startTime));
     }
 
@@ -88,10 +92,6 @@ public class ColorMapWithoutForwardCheck {
             System.out.println("Success");
             // For verification
             System.out.println(region);
-            // Print all the statistics
-            System.out.println("N: " + region.size());
-            System.out.println("Number of constraint: " + segmentSet.size());
-            System.out.println("Number of variable assignment: " + variableAssignment);
         }
     }
 

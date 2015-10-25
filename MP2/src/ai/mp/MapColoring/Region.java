@@ -40,6 +40,10 @@ public class Region {
         }
     }
 
+    public Region clone() {
+        return new Region(this.getX(), this.getY());
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

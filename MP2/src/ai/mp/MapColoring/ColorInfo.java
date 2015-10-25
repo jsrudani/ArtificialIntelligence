@@ -9,6 +9,7 @@ package ai.mp.MapColoring;
 public class ColorInfo {
 
     private final COLOR color;
+    private int remainingLegalValues;
 
     ColorInfo(COLOR color) {
         this.color = color;
@@ -16,6 +17,14 @@ public class ColorInfo {
 
     public COLOR getColor() {
         return color;
+    }
+
+    public int getRemainingLegalValues() {
+        return remainingLegalValues;
+    }
+
+    public void setRemainingLegalValues(int remainingLegalValues) {
+        this.remainingLegalValues = remainingLegalValues;
     }
 
     @Override

@@ -41,9 +41,15 @@ public class ColorMapWithoutForwardCheck {
 
         // Record the start time
         startTime = System.currentTimeMillis();
+        //System.out.println("Start time: " + startTime);
 
         // Call recursively solve()
         solve(orderedRegions,0);
+
+        // Record the end time
+        endTime = System.currentTimeMillis();
+        //System.out.println("End time: " + endTime);
+        System.out.println("Running time in ms: " + (endTime - startTime));
     }
 
     private void solve (List<Region> orderedRegions, int orderedVariableIdx) {
@@ -78,8 +84,6 @@ public class ColorMapWithoutForwardCheck {
         } else {
             // Prevent further exploring the solution
             isSolutionFound = true;
-            // Record the end time
-            endTime = System.currentTimeMillis();
             // Success path. Entire map is colored.
             System.out.println("Success");
             // For verification
@@ -88,7 +92,6 @@ public class ColorMapWithoutForwardCheck {
             System.out.println("N: " + region.size());
             System.out.println("Number of constraint: " + segmentSet.size());
             System.out.println("Number of variable assignment: " + variableAssignment);
-            System.out.println("Running time in ms: " + (endTime - startTime));
         }
     }
 

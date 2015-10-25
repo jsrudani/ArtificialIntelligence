@@ -54,9 +54,14 @@ public class MapColoring {
         System.out.println(mapColor.segmentSet);
 
         // Color the Map without forward check
-        ColorMapWithoutForwardCheck colorMap = new ColorMapWithoutForwardCheck(region
+        /*ColorMapWithoutForwardCheck colorMapWithoutFrwdChk = new ColorMapWithoutForwardCheck(region
                 ,mapColor.segmentSet);
-        colorMap.solveWithoutFrwdCheck();
+        colorMapWithoutFrwdChk.solveWithoutFrwdCheck();*/
+
+        // Color the Map with forward check
+        ColorMapWithForwardCheck colorMapWithFrwdChk = new ColorMapWithForwardCheck(region
+                ,mapColor.segmentSet);
+        colorMapWithFrwdChk.solveWithFrwdCheck();
 
     }
 

@@ -43,4 +43,10 @@ public class ValueStats {
     public int getFeatureValue() {
         return featureValue;
     }
+
+    @Override
+    public String toString() {
+        return "Value[Count="
+                + totalCount + ",likelihood=" + probablility + "]";
+    }
 }

@@ -43,4 +43,9 @@ public class Feature {
     public Map<Integer, ValueStats> getDomainToValueStats() {
         return domainToValueStats;
     }
+
+    @Override
+    public String toString() {
+        return "Feature [" + domainToValueStats + "]";
+    }
 }

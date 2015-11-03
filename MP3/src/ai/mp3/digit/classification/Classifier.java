@@ -41,7 +41,14 @@ public class Classifier {
                 , ClassifierConstant.TRAINING_DIGIT_HEIGHT
                 , ClassifierConstant.TRAINING_DIGIT_WIDTH);
         // Test the model with learned model
-        //nbClassifier.test(testimages, nbClassifier.getlearnedModel());
+        List<Integer> prediction = nbClassifier.test(testimages, nbClassifier.getlearnedModel()
+                            , ClassifierConstant.TRAINING_DIGIT_HEIGHT
+                            , ClassifierConstant.TRAINING_DIGIT_WIDTH);
+
+        // Metric collection
+        System.out.println("============= Prediction ==============");
+        System.out.println(testLables);
+        System.out.println(prediction);
     }
 
     /**

@@ -40,7 +40,7 @@ public class Utilities {
      * @param ch
      * @return Integer
      */
-    public static int getIntegerForCharacter(char ch) {
+    public static int getIntegerForPixel(char ch) {
         if (ch == ' ') {
             return 0;
         } else if (ch == '+' || ch == '#') {

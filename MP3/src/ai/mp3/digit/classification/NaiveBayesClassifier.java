@@ -3,7 +3,6 @@ package ai.mp3.digit.classification;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +16,12 @@ import java.util.Map;
 public class NaiveBayesClassifier {
 
     private Map<Integer,Class> learnedModel;
+    private Map<Integer, Metric> predictedModel;
+    private static int totalClasses = 0;
 
     NaiveBayesClassifier() {
         learnedModel = new HashMap<Integer,Class>();
+        predictedModel = new HashMap<Integer, Metric>();
     }
 
     /**
@@ -146,7 +148,7 @@ public class NaiveBayesClassifier {
      * @return predicted values
      */
     public List<Integer> test(String filename, Map<Integer,Class> learnedModel
-            , int height, int width) {
+            , int height, int width, List<Integer> testLables) {
         List<Integer> prediction = new ArrayList<Integer>();
         // Read the image of dimension (height X Width) from filename
         try {
@@ -154,13 +156,17 @@ public class NaiveBayesClassifier {
                 String line = null;
                 int lineCount = 1;
                 int [][] features = new int [height][width];
+                int currentTestClass = 0;
                 while ((line = br.readLine()) != null) {
                     if (lineCount > height) {
                         lineCount = 1;
                         // Calculate MAP for old image
-                        calculateMAPProbability(learnedModel, features, prediction);
+                        calculateMAPProbability(learnedModel, features, prediction
+                                , testLables, currentTestClass);
                         // Reset features for new image
                         features = new int [height][width];
+                        // Get the next test class for new test image
+                        currentTestClass += 1;
                     }
                     // Process pixel of test image
                     processTestImage(line, (lineCount - 1), features);
@@ -209,7 +215,7 @@ public class NaiveBayesClassifier {
      * @param prediction
      */
     private void calculateMAPProbability (Map<Integer,Class> learnedModel, int [][] features
-            , List<Integer> prediction) throws IllegalArgumentException {
+            , List<Integer> prediction, List<Integer> testLables, int currentTestLabel) throws IllegalArgumentException {
 
         float maximumPosterior = -Float.MAX_VALUE;
         Class maximumLikelihoodClass = null;
@@ -238,6 +244,17 @@ public class NaiveBayesClassifier {
         // Set the prediction based on maximum likelihood
         if (maximumLikelihoodClass != null) {
             prediction.add(maximumLikelihoodClass.getClassValue());
+            int testLabel = testLables.get(currentTestLabel);
+            if (!predictedModel.containsKey(testLabel)) {
+                predictedModel.put(testLabel, new Metric(testLabel, totalClasses));
+            }
+            // Increment test image instances
+            predictedModel.get(testLabel).incrementTestImageInstance();
+            // Set the predicted value
+            predictedModel.get(testLabel).incrementPredictedLabel(maximumLikelihoodClass.getClassValue());
+            // Set the maximum and minimum posterior probability
+            predictedModel.get(testLabel).compareAndSetMaxMinPosteriorProbability(features
+                    , maximumPosterior);
         } else {
             throw new IllegalArgumentException(" Problem in calculating MAP Maximum a Posterior");
         }
@@ -245,6 +262,18 @@ public class NaiveBayesClassifier {
 
     public Map<Integer, Class> getlearnedModel() {
         return learnedModel;
+    }
+
+    public static int getTotalClasses() {
+        return totalClasses;
+    }
+
+    public static void setTotalClasses(int totalClasses) {
+        NaiveBayesClassifier.totalClasses = totalClasses;
+    }
+
+    public Map<Integer, Metric> getPredictedModel() {
+        return predictedModel;
     }
 
     // Debug, delete after testing

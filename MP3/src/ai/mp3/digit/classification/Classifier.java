@@ -1,5 +1,8 @@
 package ai.mp3.digit.classification;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -11,6 +14,8 @@ import java.util.List;
 public class Classifier {
 
     public static void main(String[] args) {
+
+        List<OddsRatioPair> oddsRatioPair = new ArrayList<OddsRatioPair>();
         // Validate if file name is passed as an argument
         if (args.length != 7) {
             printUsage();
@@ -82,14 +87,25 @@ public class Classifier {
             System.out.print("    " + i + "|");
         }
         System.out.println();
+        // For each class (digit) in trained model
         for (Integer key : nbClassifier.getPredictedModel().keySet()) {
             int totalCount = nbClassifier.getPredictedModel().get(key).getTestImageInstance();
             System.out.print(key);
+            double highestConfusionRate = 0.0f;
+            int confusedWithDigit = 0;
+            // For each of the remaining class (digit) calculate the confusion percentage
             for (int i = 0; i < NaiveBayesClassifier.getTotalClasses(); i++) {
                 int correctClassificationCount = nbClassifier.getPredictedModel().get(key).getPredictedLabel()[i];
                 double classificationRate = Math.ceil( ((float) correctClassificationCount/ (float)totalCount) * 100 );
                 System.out.printf("  " + classificationRate + "|");
+                // Compare and get highest confusion class
+                if (classificationRate > highestConfusionRate && key != i) {
+                    confusedWithDigit = i;
+                    highestConfusionRate = classificationRate;
+                }
             }
+            // Instantiate Odds ratio pair
+            oddsRatioPair.add(new OddsRatioPair(key, confusedWithDigit, highestConfusionRate));
             System.out.println();
         }
         System.out.println("============= Highest/Lowest MAP for each class =============");
@@ -100,6 +116,18 @@ public class Classifier {
             System.out.println("Lowest Posterior Probabilities: " + nbClassifier.getPredictedModel().get(key).getMinPosteriorProbability());
             displayArray(nbClassifier.getPredictedModel().get(key).getMinPosteriorProbabilityFeature());
         }
+        System.out.println("================ Odds Ratio ============================");
+        Collections.sort(oddsRatioPair, new Comparator<OddsRatioPair>() {
+           public int compare (OddsRatioPair pair1, OddsRatioPair pair2) {
+               return (int) (pair2.getConfusionrate() - pair1.getConfusionrate());
+           }
+        });
+        System.out.println(oddsRatioPair);
+        nbClassifier.calculateOddsRatio(oddsRatioPair
+                , ClassifierConstant.UPPERLIMIT_ODDS_RATIO
+                , nbClassifier.getlearnedModel()
+                , ClassifierConstant.TRAINING_DIGIT_HEIGHT
+                , ClassifierConstant.TRAINING_DIGIT_WIDTH);
 
 // ===================================== Part 1.2 =======================================
 

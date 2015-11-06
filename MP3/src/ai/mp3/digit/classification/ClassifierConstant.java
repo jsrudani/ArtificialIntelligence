@@ -45,5 +45,9 @@ public class ClassifierConstant {
      * It represent number of possible values the feature can take on.
      */
     public static final int INCREMENT_COLUMN = 1;
+    /**
+     * It represent limitation for number of odds ratio.
+     */
+    public static final int UPPERLIMIT_ODDS_RATIO = 4;
 
 }

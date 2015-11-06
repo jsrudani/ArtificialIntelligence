@@ -496,6 +496,50 @@ public class NaiveBayesClassifier {
         }
     }
 
+    public void calculateOddsRatio (List<OddsRatioPair> oddsRatioPair
+            , final int upperLimit
+            , Map<Integer,Class> learnedModel
+            , final int height
+            , final int width) {
+        double [][] oddsratioprobability;
+        // Calculate odds ratio for top 4 highest confusion pair
+        for (int i = 0;i < upperLimit;i++) {
+            oddsratioprobability = new double[height][width];
+            OddsRatioPair pair = oddsRatioPair.get(i);
+            // Get the likelihood for both classes (digit)
+            float [][] correctLabellikelihood = learnedModel.get(pair.getCorrectLabel()).getLikelihood();
+            //System.out.println("Likelihood for class: " + pair.getCorrectLabel());
+            //displayProbabilityRatio(correctLabellikelihood);
+            float [][] wrongLabellikelihood = learnedModel.get(pair.getPredictedLabel()).getLikelihood();
+            //System.out.println("Likelihood for class: " + pair.getPredictedLabel());
+            //displayProbabilityRatio(wrongLabellikelihood);
+            for (int row = 0; row < correctLabellikelihood.length; row++) {
+                for (int column = 0; column < correctLabellikelihood[0].length; column++) {
+                    double odds = ( Math.log(correctLabellikelihood[row][column]) - Math.log(wrongLabellikelihood[row][column]) );
+                    oddsratioprobability[row][column] = odds;
+                }
+            }
+            // Display odds ratio
+            displayOddsRatio(pair, oddsratioprobability);
+        }
+    }
+
+    private void displayOddsRatio (OddsRatioPair pair, double [][] oddsratioprobability) {
+        System.out.println("Odds Ratio Pair [" + pair.getCorrectLabel() + "," + pair.getPredictedLabel() + "]");
+        for (int row = 0; row < oddsratioprobability.length; row++) {
+            for (int column = 0; column < oddsratioprobability[0].length; column++) {
+                if (oddsratioprobability[row][column] >= 0.0) {
+                    System.out.print('+');
+                } else if (oddsratioprobability[row][column] >= -0.5 && oddsratioprobability[row][column] <= 1.0) {
+                    System.out.print(' ');
+                } else {
+                    System.out.print('-');
+                }
+            }
+            System.out.println();
+        }
+    }
+
     public Map<Integer, Class> getlearnedModel() {
         return learnedModel;
     }

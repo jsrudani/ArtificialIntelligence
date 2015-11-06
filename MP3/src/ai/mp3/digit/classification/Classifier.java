@@ -35,6 +35,7 @@ public class Classifier {
         System.out.println("Training label file name: " + traininglabels);
         System.out.println("Test data file name: " + testimages);
         System.out.println("Test label file name: " + testlabels);
+        System.out.println();
 
         // Get the training and test labels
         List<Integer> trainingLabels = Utilities.readLabelFile(traininglabels);
@@ -44,7 +45,7 @@ public class Classifier {
 
 // ===================================== Part 1.1 =======================================
         // Train the model
-        /*nbClassifier.training(trainingimages, trainingLabels
+        nbClassifier.training(trainingimages, trainingLabels
                 , ClassifierConstant.TRAINING_DIGIT_CLASSIFICATION_COUNT
                 , ClassifierConstant.TRAINING_DIGIT_HEIGHT
                 , ClassifierConstant.TRAINING_DIGIT_WIDTH);
@@ -75,7 +76,7 @@ public class Classifier {
             correctPredictedTestImages += correctClassificationCount;
         }
         System.out.println("============= Overall Accuracy =============");
-        System.out.println( Math.ceil( ((float)correctPredictedTestImages / (float)totalTestImages) * 100) );
+        System.out.println( ((float)correctPredictedTestImages / (float)totalTestImages) * 100) ;
         System.out.println("============= Confusion Matrix =============");
         for (int i = 0; i < NaiveBayesClassifier.getTotalClasses(); i++) {
             System.out.print("    " + i + "|");
@@ -90,18 +91,25 @@ public class Classifier {
                 System.out.printf("  " + classificationRate + "|");
             }
             System.out.println();
-        }*/
-        /*System.out.println("============= Highest/Lowest MAP for each class =============");
+        }
+        System.out.println("============= Highest/Lowest MAP for each class =============");
         for (Integer key : nbClassifier.getPredictedModel().keySet()) {
             System.out.println("Class: " + key);
             System.out.println("Highest Posterior Probabilities : " + nbClassifier.getPredictedModel().get(key).getMaxPosteriorProbability());
             displayArray(nbClassifier.getPredictedModel().get(key).getMaxPosteriorProbabilityFeature());
             System.out.println("Lowest Posterior Probabilities: " + nbClassifier.getPredictedModel().get(key).getMinPosteriorProbability());
             displayArray(nbClassifier.getPredictedModel().get(key).getMinPosteriorProbabilityFeature());
-        }*/
+        }
 
 // ===================================== Part 1.2 =======================================
 
+        // Time Metric for training
+        long startTime = 0L;
+        long endTime = 0L;
+        long totalTime = 0L;
+        long trainingTime = 0L;
+        long testTime = 0L;
+        startTime = System.currentTimeMillis();
         // Train the model
         nbClassifier.training(trainingimages, trainingLabels
                 , ClassifierConstant.TRAINING_DIGIT_CLASSIFICATION_COUNT
@@ -110,7 +118,11 @@ public class Classifier {
                 , FEATURE_HEIGHT
                 , FEATURE_WIDTH
                 , isFeatureOverlap);
+        endTime = System.currentTimeMillis();
+        trainingTime = (endTime - startTime);
+        totalTime += trainingTime;
         // Test the model
+        startTime = System.currentTimeMillis();
         List<Integer> predictions = nbClassifier.test(testimages
                 , nbClassifier.getTrainedModelWithGroupFeature()
                 , ClassifierConstant.TRAINING_DIGIT_HEIGHT
@@ -119,7 +131,9 @@ public class Classifier {
                 , FEATURE_WIDTH
                 , isFeatureOverlap
                 , testLables);
-
+        endTime = System.currentTimeMillis();
+        testTime = (endTime - startTime);
+        totalTime += testTime;
         System.out.println("============= Prediction with disjoint and overlap feature  ==============");
         System.out.println(testLables);
         System.out.println(predictions);
@@ -132,6 +146,10 @@ public class Classifier {
         }
         float accuracy = ((float)correctPrediction/(float)testLables.size()) * 100;
         System.out.println(accuracy);
+        System.out.println("=============== Time statistic (ms) ======================");
+        System.out.println("Time required to train the model: " + trainingTime);
+        System.out.println("Time required to test model: " + testTime);
+        System.out.println("Total Time: " + totalTime);
     }
 
     private static void displayArray(int [][] feature) {

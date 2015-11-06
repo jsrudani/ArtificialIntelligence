@@ -32,7 +32,11 @@ public class ClassifierConstant {
     /**
      * It represent number of possible values the feature can take on.
      */
-    public static final int V = 16;
+    public static final int V = 2;
+    /**
+     * It represent number of possible values the feature can take on.
+     */
+    public static final int DISJOINT_OVERLAP_V = 16;
     /**
      * It represent number of possible values the feature can take on.
      */

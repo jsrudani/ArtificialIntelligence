@@ -3,7 +3,6 @@ package ai.mp3.digit.classification;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +52,7 @@ public class NaiveBayesClassifier {
                 // Increment sample count for current class
                 learnedModel.get(key).incrementSampleCount();
                 while ((line = br.readLine()) != null) {
-                    // Check if line read count is greater than image height. If yes then
-                    // new image starts else old image
+                    // Check if line read count is greater than image height. If yes then new image starts else old image
                     if (lineCount > height) {
                         lineCount = 1;
                         totalImages += 1;
@@ -71,7 +69,6 @@ public class NaiveBayesClassifier {
                     lineCount += 1;
                 }
             }
-            //System.out.println("========== Training Model ==============");
             // Calculate probability
             calculatePriorNLikelihoodProbability(learnedModel, totalSample);
 
@@ -132,12 +129,6 @@ public class NaiveBayesClassifier {
                     learnedModel.get(key).setLikelihoodProbability(row, column, likelihood);
                 }
             }
-/*            // Debug
-            System.out.println("Key: " + key);
-            System.out.println("Features: \n");
-            displayArray(learnedModel.get(key).getFeatures());
-            System.out.println("Likelihood: \n");
-            displayArray(learnedModel.get(key).getLikelihood());*/
         }
     }
 
@@ -284,8 +275,6 @@ public class NaiveBayesClassifier {
 
         // Get the number of values per features
         final int NUMBER_OF_VALUE_PER_FEATURE = (int) Math.pow(2, (FEATURE_HEIGHT * FEATURE_WIDTH));
-        // Get the number of features
-        final int NUMBER_OF_FEATURES = (height * width)/(FEATURE_HEIGHT * FEATURE_WIDTH);
         // Set the increment factor for row and column
         int incrementRow = (isFeatureOverlap ? ClassifierConstant.INCREMENT_ROW : FEATURE_HEIGHT);
         int incrementColumn = (isFeatureOverlap ? ClassifierConstant.INCREMENT_COLUMN : FEATURE_WIDTH);
@@ -308,8 +297,6 @@ public class NaiveBayesClassifier {
                     // Check if line read count is greater than image height. If yes then new image starts else old image
                     if (lineCount > height) {
                         lineCount = 1;
-                        // Debug
-                        //displayArray(trainingimg);
                         // Process the previous image stored in training image feature matrix
                         evaluateDisjointNOverlapFeature(trainingimg
                                 , trainedModelWithGroupFeature
@@ -317,8 +304,6 @@ public class NaiveBayesClassifier {
                                 , height, width, FEATURE_HEIGHT, FEATURE_WIDTH
                                 , incrementRow, incrementColumn
                                 , NUMBER_OF_VALUE_PER_FEATURE);
-                        // debug
-                        //debugMap(trainedModelWithGroupFeature);
                         // Perform activity for new image
                         totalImages += 1;
                         key = trainingLabels.get(totalImages);
@@ -402,12 +387,10 @@ public class NaiveBayesClassifier {
                 for (int index = 0; index < featureValue.length; index++) {
                     int feature_value_count = featureValue[index];
                     float likelihood = (float)(feature_value_count + ClassifierConstant.LAPLACIAN_K_CONSTANT)
-                                /(float)(samples + (ClassifierConstant.LAPLACIAN_K_CONSTANT * ClassifierConstant.V) );
+                                /(float)(samples + (ClassifierConstant.LAPLACIAN_K_CONSTANT * ClassifierConstant.DISJOINT_OVERLAP_V) );
                     trainedModelWithGroupFeature.get(key).getClassToFeatureLikelikhoodMap().get(feature)[index] = likelihood;
                 }
             }
-            // debug
-            //debugProbabilityMap(trainedModelWithGroupFeature, key);
         }
     }
 
@@ -421,10 +404,6 @@ public class NaiveBayesClassifier {
             , List<Integer> testLables) {
 
         List<Integer> prediction = new ArrayList<Integer>();
-        // Get the number of values per features
-        final int NUMBER_OF_VALUE_PER_FEATURE = (int) Math.pow(2, (FEATURE_HEIGHT * FEATURE_WIDTH));
-        // Get the number of features
-        final int NUMBER_OF_FEATURES = (height * width)/(FEATURE_HEIGHT * FEATURE_WIDTH);
         // Set the increment factor for row and column
         int incrementRow = (isFeatureOverlap ? ClassifierConstant.INCREMENT_ROW : FEATURE_HEIGHT);
         int incrementColumn = (isFeatureOverlap ? ClassifierConstant.INCREMENT_COLUMN : FEATURE_WIDTH);
@@ -438,11 +417,8 @@ public class NaiveBayesClassifier {
                 while ((line = br.readLine()) != null) {
                     if (lineCount > height) {
                         lineCount = 1;
-                        // debug
-                        //displayArray(features);
                         // Prepare feature based on disjoint or overlap feature characteristics
                         List<Integer> feature = prepareDisjointOverlapFeature(features,height,width,FEATURE_HEIGHT,FEATURE_WIDTH,incrementRow,incrementColumn);
-                        //System.out.println(feature);
                         // Calculate MAP for old image
                         calculateMAPProbability(learnedModel, feature, prediction);
                         // Reset features for new image
@@ -538,49 +514,5 @@ public class NaiveBayesClassifier {
 
     public Map<Integer, Class> getTrainedModelWithGroupFeature() {
         return trainedModelWithGroupFeature;
-    }
-
-    // Debug, delete after testing
-    private void displayArray(int [][] prob) {
-        for (int row = 0; row < prob.length; row++) {
-            for (int column = 0; column < prob[0].length; column++) {
-                System.out.print(prob[row][column]);
-            }
-            System.out.println();
-        }
-    }
-    private void displayArray(float [][] prob) {
-        for (int row = 0; row < prob.length; row++) {
-            for (int column = 0; column < prob[0].length; column++) {
-                System.out.print(prob[row][column]);
-            }
-            System.out.println();
-        }
-    }
-    private void debugMap (Map<Integer, Class> trainedModel) {
-
-        for (Integer key : trainedModel.keySet()) {
-            System.out.println("Class: " + key);
-            for (Integer feature : trainedModel.get(key).getClassToFeatureValueMap().keySet()) {
-                System.out.print("Feature: " + feature + " ---> ");
-                for (int i = 0; i < trainedModel.get(key).getClassToFeatureValueMap().get(feature).length; i++) {
-                    System.out.print(trainedModel.get(key).getClassToFeatureValueMap().get(feature)[i]);
-                }
-                System.out.println();
-                //System.out.println(trainedModel.get(key).getClassToFeatureValueMap().get(feature));
-            }
-        }
-    }
-    private void debugProbabilityMap (Map<Integer, Class> trainedModel, int key) {
-
-            System.out.println("Class: " + key);
-            for (Integer feature : trainedModel.get(key).getClassToFeatureValueMap().keySet()) {
-                System.out.print("Feature prob: " + feature + " ---> ");
-                for (int i = 0; i < trainedModel.get(key).getClassToFeatureLikelikhoodMap().get(feature).length; i++) {
-                    System.out.print(trainedModel.get(key).getClassToFeatureLikelikhoodMap().get(feature)[i]);
-                }
-                System.out.println();
-                //System.out.println(trainedModel.get(key).getClassToFeatureValueMap().get(feature));
-            }
     }
 }

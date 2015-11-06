@@ -12,7 +12,7 @@ public class Classifier {
 
     public static void main(String[] args) {
         // Validate if file name is passed as an argument
-        if (args.length != 4) {
+        if (args.length != 7) {
             printUsage();
         }
         // Get the Training data
@@ -23,6 +23,12 @@ public class Classifier {
         String testimages = args[2];
         // Get the Test labels
         String testlabels = args[3];
+        // Get the feature height
+        final int FEATURE_HEIGHT = Integer.parseInt(args[4]);
+        // Get the feature width
+        final int FEATURE_WIDTH = Integer.parseInt(args[5]);
+        // Get the overlap feature
+        final boolean isFeatureOverlap = Boolean.parseBoolean(args[6]);
 
         // Debug statement
         System.out.println("Training data file name: " + trainingimages);
@@ -35,8 +41,10 @@ public class Classifier {
         List<Integer> testLables = Utilities.readLabelFile(testlabels);
 
         NaiveBayesClassifier nbClassifier = new NaiveBayesClassifier();
+
+// ===================================== Part 1.1 =======================================
         // Train the model
-        nbClassifier.training(trainingimages, trainingLabels
+        /*nbClassifier.training(trainingimages, trainingLabels
                 , ClassifierConstant.TRAINING_DIGIT_CLASSIFICATION_COUNT
                 , ClassifierConstant.TRAINING_DIGIT_HEIGHT
                 , ClassifierConstant.TRAINING_DIGIT_WIDTH);
@@ -82,15 +90,48 @@ public class Classifier {
                 System.out.printf("  " + classificationRate + "|");
             }
             System.out.println();
-        }
-        System.out.println("============= Highest/Lowest MAP for each class =============");
+        }*/
+        /*System.out.println("============= Highest/Lowest MAP for each class =============");
         for (Integer key : nbClassifier.getPredictedModel().keySet()) {
             System.out.println("Class: " + key);
             System.out.println("Highest Posterior Probabilities : " + nbClassifier.getPredictedModel().get(key).getMaxPosteriorProbability());
             displayArray(nbClassifier.getPredictedModel().get(key).getMaxPosteriorProbabilityFeature());
             System.out.println("Lowest Posterior Probabilities: " + nbClassifier.getPredictedModel().get(key).getMinPosteriorProbability());
             displayArray(nbClassifier.getPredictedModel().get(key).getMinPosteriorProbabilityFeature());
+        }*/
+
+// ===================================== Part 1.2 =======================================
+
+        // Train the model
+        nbClassifier.training(trainingimages, trainingLabels
+                , ClassifierConstant.TRAINING_DIGIT_CLASSIFICATION_COUNT
+                , ClassifierConstant.TRAINING_DIGIT_HEIGHT
+                , ClassifierConstant.TRAINING_DIGIT_WIDTH
+                , FEATURE_HEIGHT
+                , FEATURE_WIDTH
+                , isFeatureOverlap);
+        // Test the model
+        List<Integer> predictions = nbClassifier.test(testimages
+                , nbClassifier.getTrainedModelWithGroupFeature()
+                , ClassifierConstant.TRAINING_DIGIT_HEIGHT
+                , ClassifierConstant.TRAINING_DIGIT_WIDTH
+                , FEATURE_HEIGHT
+                , FEATURE_WIDTH
+                , isFeatureOverlap
+                , testLables);
+
+        System.out.println("============= Prediction with disjoint and overlap feature  ==============");
+        System.out.println(testLables);
+        System.out.println(predictions);
+        System.out.println("============= Accuracy ===================");
+        int correctPrediction = 0;
+        for(int i = 0; i < testLables.size(); i++) {
+            if (testLables.get(i) == predictions.get(i)) {
+                correctPrediction += 1;
+            }
         }
+        float accuracy = ((float)correctPrediction/(float)testLables.size()) * 100;
+        System.out.println(accuracy);
     }
 
     private static void displayArray(int [][] feature) {
@@ -114,7 +155,10 @@ public class Classifier {
                 + "1. File containing Training data \n"
                 + "2. File containing Training labels \n"
                 + "3. File containing Test Data \n"
-                + "4. File containing Test labels \n";
+                + "4. File containing Test labels \n"
+                + "5. Feature extraction height \n"
+                + "6. Feature extraction width \n"
+                + "7. Is Feature overlap or disjoint \n";
         System.out.println(usage);
     }
 }

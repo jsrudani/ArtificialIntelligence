@@ -1,6 +1,8 @@
 package ai.mp3.digit.classification;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * It is used to represent class for which we need to classify test data into. It contains
@@ -14,7 +16,6 @@ import java.util.Arrays;
  * @author rudani2
  *
  */
-@SuppressWarnings("unused")
 public class Class {
 
     private final int classValue;
@@ -22,15 +23,20 @@ public class Class {
     private float prior;
     private int [][] features;
     private float [][] likelihood;
-    private final int height;
-    private final int width;
+
+    private Map<Integer, int [] > classToFeatureValueMap;
+    private Map<Integer, float [] > classToFeatureLikelikhoodMap;
 
     Class(int classValue, int height, int width) {
         this.classValue = classValue;
-        this.height = height;
-        this.width = width;
         this.features = new int[height][width];
         this.likelihood = new float[height][width];
+    }
+
+    Class(int classValue) {
+        this.classValue = classValue;
+        this.classToFeatureValueMap = new HashMap<Integer, int []>();
+        this.classToFeatureLikelikhoodMap = new HashMap<Integer, float []>();
     }
 
     public long getNumberOfSamplesForClass() {
@@ -67,6 +73,14 @@ public class Class {
 
     public float[][] getLikelihood() {
         return likelihood;
+    }
+
+    public Map<Integer, int[]> getClassToFeatureValueMap() {
+        return classToFeatureValueMap;
+    }
+
+    public Map<Integer, float[]> getClassToFeatureLikelikhoodMap() {
+        return classToFeatureLikelikhoodMap;
     }
 
     @Override

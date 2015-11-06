@@ -25,15 +25,21 @@ public class ClassifierConstant {
      * It represent training digit image width.
      */
     public static final int TRAINING_DIGIT_WIDTH = 28;
-
     /**
      * It represent Laplacian K constant.
      */
-    public static final int LAPLACIAN_K_CONSTANT = 2;
-
+    public static final int LAPLACIAN_K_CONSTANT = 1;
     /**
      * It represent number of possible values the feature can take on.
      */
-    public static final int V = 2;
+    public static final int V = 16;
+    /**
+     * It represent number of possible values the feature can take on.
+     */
+    public static final int INCREMENT_ROW = 1;
+    /**
+     * It represent number of possible values the feature can take on.
+     */
+    public static final int INCREMENT_COLUMN = 1;
 
 }

@@ -2,6 +2,7 @@ package ai.mp4.mdp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * It is used to find optimal policy using value iteration method.
@@ -24,19 +25,23 @@ public class ValueIteration {
 
     private final float [][] mapGrid;
     private final Position startPosition;
+    private final Set<Position> terminalState;
+    private final boolean isRewardTerminal;
     private char[][] optimalPolicy;
     private List<float [][]> utility_per_iteration;
     private int iterationCount = 0;
     private float[][] uPrime;
     private float[][] u;
 
-    ValueIteration (float [][] mapGrid, Position startPosition) {
+    ValueIteration (float [][] mapGrid, Position startPosition, Set<Position> terminalState, boolean isRewardTerminal) {
         this.mapGrid = mapGrid;
         this.startPosition = startPosition;
         this.optimalPolicy = new char[mapGrid.length][mapGrid[0].length];
         this.uPrime = new float[mapGrid.length][mapGrid[0].length];
         this.u = new float[mapGrid.length][mapGrid[0].length];
         this.utility_per_iteration = new ArrayList<float [][]>();
+        this.terminalState = terminalState;
+        this.isRewardTerminal = isRewardTerminal;
     }
 
     public void findOptimalPolicy() {
@@ -46,6 +51,7 @@ public class ValueIteration {
         int rowSize = optimalPolicy.length;
         int colSize = optimalPolicy[0].length;
         do {
+
             delta = 0.0f;
             // Clone uprime into u
             cloneUPrime(u,uPrime);
@@ -57,33 +63,31 @@ public class ValueIteration {
                         optimalPolicy[state.getX()][state.getY()] = 'W';
                         continue;
                     }
-                        
-                    // Get the max expected utility
-                    Position optimalState = getMaxExpectedUtility(state,optimalPolicy,u);
-                    // Set the utility for current state
-                    uPrime[state.getX()][state.getY()] = mapGrid[state.getX()][state.getY()]
-                                            + (MDPConstant.GAMMA * optimalState.getUtility());
+                    // Check if it is terminal state
+                    if (isRewardTerminal && isTerminalState(state)) {
+                        // Set only the reward of terminal state since there is no other state
+                        // from terminal state
+                        uPrime[state.getX()][state.getY()] = mapGrid[state.getX()][state.getY()];
+                        optimalPolicy[state.getX()][state.getY()] = '-';
+                    } else {
+                        // Get the max expected utility
+                        Position optimalState = getMaxExpectedUtility(state,optimalPolicy,u);
+                        // Set the utility for current state
+                        uPrime[state.getX()][state.getY()] = mapGrid[state.getX()][state.getY()]
+                                                + (MDPConstant.GAMMA * optimalState.getUtility());
+                    }
                     // Check the difference for convergence
                     if (Math.abs(uPrime[state.getX()][state.getY()] - u[state.getX()][state.getY()]) > delta) {
                         delta = Math.abs(uPrime[state.getX()][state.getY()] - u[state.getX()][state.getY()]);
                     }
                 }
             }
-            /*// Get the max expected utility
-            Position optimalState = getMaxExpectedUtility(state,optimalPolicy,u);
-            // Set the utility for current state
-            uPrime[state.getX()][state.getY()] = mapGrid[state.getX()][state.getY()]
-                                  + (MDPConstant.GAMMA * optimalState.getUtility());
-            // Check the difference for convergence
-            if (Math.abs(uPrime[state.getX()][state.getY()] - u[state.getX()][state.getY()]) > delta) {
-               delta = Math.abs(uPrime[state.getX()][state.getY()] - u[state.getX()][state.getY()]);
-            }*/
             // Store the utility per iteration
             utility_per_iteration.add(uPrime);
+            //displayUtilityPerIteration(utility_per_iteration, iterationCount);
             // Increment the iteration count
             iterationCount += 1;
-            // Update state
-            //state = optimalState;
+
         } while (delta >= threshold);
     }
 
@@ -153,6 +157,9 @@ public class ValueIteration {
             }
             optimalPolicy[state.getX()][state.getY()] = 'L';
         }
+        // Debug remove this
+        //System.out.println("State " + state + " Optimal State " + optimalState);
+        //displayPolicy(optimalPolicy);
         // Set the max utility
         optimalState.setUtility(maxUtility);
         return optimalState;
@@ -165,8 +172,6 @@ public class ValueIteration {
     }
 
     private float getUtility(int child_x, int child_y, Position parent, float [][] u) {
-        //System.out.println("Child " + child);
-        //System.out.println("Parent " + parent);
         return (isValid(child_x,child_y) ? u[child_x][child_y] : u[parent.getX()][parent.getY()]);
     }
 
@@ -183,6 +188,10 @@ public class ValueIteration {
             return true;
         }
         return false;
+    }
+
+    private boolean isTerminalState(Position child) {
+        return terminalState.contains(child);
     }
 
     private boolean isValid(int x, int y) {
@@ -223,5 +232,27 @@ public class ValueIteration {
 
     public int getIterationCount() {
         return iterationCount;
+    }
+
+    private static void displayPolicy(char[][] optimalPolicy) {
+        int rowSize = optimalPolicy.length;
+        int colSize = optimalPolicy[0].length;
+        for (int row = 0; row < rowSize; row++) {
+            for (int col = 0; col < colSize; col++) {
+                System.out.print(optimalPolicy[row][col] + "\t");
+            }
+            System.out.println();
+        }
+    }
+
+    private static void displayUtilityPerIteration(List<float [][]> utility_per_iteration, int index) {
+        int rowSize = utility_per_iteration.get(0).length;
+        int colSize = utility_per_iteration.get(0)[0].length;
+        for (int row = 0; row < rowSize; row++) {
+            for (int col = 0; col < colSize; col++) {
+                System.out.print(utility_per_iteration.get(index)[row][col] + ",");
+            }
+        }
+        System.out.println();
     }
 }
